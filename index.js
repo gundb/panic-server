@@ -3,9 +3,11 @@ var test, gun;
 
 test = function (opt) {
 	'use strict';
+
 	opt = patch(opt);
-	var i, count, db = gun.get(opt.key).set();
+	var i, count, db;
 	gun = new Gun(opt.peers);
+	db = gun.get(opt.key).set();
 	count = 0;
 
 	function ack(num) {
@@ -17,8 +19,17 @@ test = function (opt) {
 			}
 		};
 	}
-	for (i = 1; i <= opt.amount; i += 1) {
-		db.set(opt.data, ack(i));
+	function run(num) {
+		db.set(opt.data, ack(num));
+
+		if (num === opt.amount) {
+			return db;
+		}
+		setTimeout(function () {
+			run(num + 1);
+		}, opt.interval > 16 ? opt.interval : Infinity);
+		return db;
 	}
-	return db;
+
+	return run(0);
 };

@@ -17,20 +17,16 @@
 
 function patch(opt) {
 	'use strict';
-	if (!opt) {
-		throw new Error('No options provided');
-	}
-	if (!opt.id) {
-		throw new Error('No ID given');
-	}
 	var url = location.protocol + '//';
 	url += location.host;
 	url += '/gun';
 
+	opt = opt || {};
 	opt.key = opt.key || 'panic/test/';
-	opt.interval = opt.interval || 20;
+	opt.interval = opt.interval || 0;
 	opt.peers = opt.peers || [url];
-	opt.amount = opt.amount || 1000;
+	opt.amount = opt.amount || 300;
+	opt.id = opt.id || Gun.text.random();
 	opt.path = opt.path || Gun.text.random();
 	opt.data = opt.data || Gun.text.random();
 	return opt;
