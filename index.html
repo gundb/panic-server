@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Battle Test</title>
+	<link rel="stylesheet" href="index.css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+	<h1>Distributed Testing</h1>
+	<p>
+		The purpose of this test is to simulate load. We want to make this as easy as possible, but there are various limitations. This page will explain how to do more thorough tests and gives you options to configure them.
+	</p>
+	<p>
+		First off, we will programmatically open
+		<input id="tabs" type="number" value="5"> number of tabs with a
+		<input id="stage" type="number" value="5"> millisecond delay between each.
+	</p>
+	<p>
+		These tabs will then connect to the local gun server, running on
+		<input id="port" type="number" value="8080" disabled="true">.
+	</p>
+	<p>
+		They will start to spam the system with
+		<input id="each" type="number" value="100"> messages each, at a
+		<input id="interval" type="number" value="20"> millisecond interval.
+		<i>Note: The server's file.js persistence module is not very reliable and should not be used for anything other than local development.</i>
+	</p>
+	<p>
+		Each message will have the peer ID in it, a message ID, and a random string of
+		<input id="length" type="number" value="140"> characters.
+	</p>
+	<p>
+		Make sure your server is on, that popups are allowed, and that you are in a fresh window.
+	</p>
+	<div>
+		<button id="start">start the test</button>
+		<button id="close">Close tabs</button>
+	</div>
+	<div id="stats">
+		Status: <span id="test-status">Not Started.</span>
+		<div>
+			<h3>Peers:</h3>
+			<ul id="peers">
+
+			</ul>
+		</div>
+	</div>
+	<div class="model" style="display: none;">
+		<li class="peer">
+			<span class="id">peer ID</span> is <span class="status">null</span>.
+		</li>
+	</div>
+	<p>
+		Future versions of this test will want to include:
+		<ul>
+			<li>Automatically calculate results.</li>
+			<li>Ability to cause random chaos, like network hiccups.</li>
+			<li>Collaboratively run across multiple browsers and devices.</li>
+			<li>Do complex tasks on different data structures.</li>
+			<li>Multi-peer connections.</li>
+			<li>Jepsen level awesomeness.</li>
+		</ul>
+		Any help on building this out would be appreciated!
+	</p>
+	<script src="gun.js"></script>
+	<script src="index.js"></script>
+</body>
+
+</html>
