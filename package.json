@@ -1,0 +1,30 @@
+{
+  "name": "panic",
+  "version": "0.1.0",
+  "description": "Test gun against a storm of requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PsychoLlama/panic.git"
+  },
+  "keywords": [
+    "gun",
+    "gundb",
+    "test",
+    "testing",
+    "distributed"
+  ],
+  "author": "Jesse Gibson <jesse@gundb.io> (http://techllama.com)",
+  "license": "(Zlib OR MIT OR Apache-2.0)",
+  "bugs": {
+    "url": "https://github.com/PsychoLlama/panic/issues"
+  },
+  "homepage": "https://github.com/PsychoLlama/panic#readme",
+  "dependencies": {
+    "gun-level": "^2.1.1"
+  }
+}
