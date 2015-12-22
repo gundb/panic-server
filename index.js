@@ -1,35 +1,57 @@
-/*globals Gun, console, patch */
-var test, gun;
+/*globals Gun, console, patch, finisher, stats */
+var test;
 
 test = function (opt) {
 	'use strict';
 
 	opt = patch(opt);
-	var i, count, db;
+
+	var gun, resetDoneTimer, db, confirmed = {};
+	resetDoneTimer = finisher();
 	gun = new Gun(opt.peers);
 	db = gun.get(opt.key).set();
-	count = 0;
 
 	function ack(num) {
 		return function (err, ok) {
-			count += 1;
-			console.log('ACK:', err, ok, 'on', num);
-			if (count === opt.amount) {
-				console.log('0% loss');
+			if (confirmed[num]) {
+				return;
 			}
+			opt.requests[num - 1].end = Gun.time.is();
+			confirmed[num] = true;
+			opt.progress(opt, num);
+			resetDoneTimer(db, stats(opt));
 		};
 	}
-	function run(num) {
-		db.set(opt.data, ack(num));
 
-		if (num === opt.amount) {
-			return db;
+	function run(num) {
+		var cb, packet = opt.packet();
+		cb = ack(num);
+		opt.requests[num - 1] = {
+			start: packet.time
+		};
+
+		db.path(opt.path).set(packet, cb);
+
+		if (num === opt.packets) {
+			return;
 		}
+
 		setTimeout(function () {
 			run(num + 1);
-		}, opt.interval > 16 ? opt.interval : Infinity);
-		return db;
-	}
+		}, opt.interval);
 
-	return run(0);
+		return opt;
+	}
+	resetDoneTimer(db, opt);
+
+	return run(1);
 };
+
+
+
+
+if (typeof window !== 'undefined') {
+	if (window.options) {
+		test(window.options);
+	}
+}
