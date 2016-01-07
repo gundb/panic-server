@@ -1,9 +1,17 @@
 /*jslint node: true, nomen: true */
-var port, app, express = require('express');
-app = express();
+var port, server, gun, Gun, express = require('express');
+server = express();
 port = process.argv[2] || 8080;
+Gun = require('gun-level');
 
-app.use('/', express['static'](__dirname));
+server.use('/', express['static'](__dirname));
 
-require('gun-level')().attach(app);
-app.listen(port);
+server.listen(port);
+gun = new Gun({
+	level: {
+		blaze: 'results/',
+		share: true
+	}
+}).wsp(server);
+server.use(gun.wsp.server);
+

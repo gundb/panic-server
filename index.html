@@ -39,15 +39,8 @@
 		<button id="start">start the test</button>
 		<button id="close">Close tabs</button>
 	</div>
-	<div id="stats">
-		Status: <span id="test-status">Not Started.</span>
-		<div>
-			<h3>Peers:</h3>
-			<ul id="peers">
-
-			</ul>
-		</div>
-	</div>
+	<table id="stats">
+	</table>
 	<div class="model" style="display: none;">
 		<li class="peer">
 			<span class="id">peer ID</span> is <span class="status">null</span>.
@@ -56,23 +49,23 @@
 	<p>
 		Future versions of this test will want to include:
 		<ul>
-			<li>Automatically calculate results.</li>
 			<li>Ability to cause random chaos, like network hiccups.</li>
 			<li>Collaboratively run across multiple browsers and devices.</li>
 			<li>Do complex tasks on different data structures.</li>
 			<li>Multi-peer connections.</li>
 			<li>Jepsen level awesomeness.</li>
 		</ul>
-		Any help on building this out would be appreciated!
 	</p>
 	<script src="gun.js"></script>
-	<script src="polyfill.js"></script>
-	<script src="statistics.js"></script>
+	<script src="lib/polyfill.js"></script>
+	<script src="lib/statistics.js"></script>
+	<script src="lib/jquery.min.js"></script>
 	<script src="done.js"></script>
 	<script src="node_modules/mavis/index.js"></script>
-	<script src="patch.js"></script>
+	<script src="lib/patch.js"></script>
 	<script src="index.js"></script>
 	<script src="browser.js"></script>
+	<script src="ui.js"></script>
 </body>
 
 </html>

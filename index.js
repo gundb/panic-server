@@ -1,7 +1,5 @@
 /*globals Gun, console, patch, finisher, stats */
-var test;
-
-test = function (opt) {
+function test(opt) {
 	'use strict';
 
 	opt = patch(opt);
@@ -9,14 +7,18 @@ test = function (opt) {
 	var gun, resetDoneTimer, db, confirmed = {};
 	resetDoneTimer = finisher();
 	gun = new Gun(opt.peers);
-	db = gun.get(opt.key).set();
+	db = gun.get(opt.key);
 
 	function ack(num) {
 		return function (err, ok) {
-			if (confirmed[num]) {
+			if (confirmed[num] && !err) {
 				return;
 			}
-			opt.requests[num - 1].end = Gun.time.is();
+			var request = opt.requests[num - 1];
+			request.end = Gun.time.is();
+			if (err) {
+				request.errors.push(err);
+			}
 			confirmed[num] = true;
 			opt.progress(opt, num);
 			resetDoneTimer(db, stats(opt));
@@ -27,10 +29,11 @@ test = function (opt) {
 		var cb, packet = opt.packet();
 		cb = ack(num);
 		opt.requests[num - 1] = {
-			start: packet.time
+			start: packet.time,
+			errors: []
 		};
 
-		db.path(opt.path).set(packet, cb);
+		db.path(opt.path).path(Gun.text.random()).put(packet, cb);
 
 		if (num === opt.packets) {
 			return;
@@ -45,7 +48,7 @@ test = function (opt) {
 	resetDoneTimer(db, opt);
 
 	return run(1);
-};
+}
 
 
 
