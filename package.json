@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/PsychoLlama/panic#readme",
   "dependencies": {
-    "gun-level": "^2.1.1"
+    "express": "^4.13.3",
+    "gun-level": "psychollama/gun-level#zero-three",
+    "mavis": "^1.4.1"
   }
 }
