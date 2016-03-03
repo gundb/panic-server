@@ -4,8 +4,9 @@
   "description": "Test gun against a storm of requests",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "jasmine",
+    "start": "node server/server.js",
+    "build": "webpack --watch"
   },
   "repository": {
     "type": "git",
@@ -25,8 +26,14 @@
   },
   "homepage": "https://github.com/PsychoLlama/panic#readme",
   "dependencies": {
+    "axios": "^0.9.1",
+    "body-parser": "^1.15.0",
     "express": "^4.13.3",
-    "gun-level": "psychollama/gun-level#zero-three",
-    "mavis": "^1.4.1"
+    "gun": "^0.3.1",
+    "object-assign-deep": "0.0.4"
+  },
+  "devDependencies": {
+    "jasmine": "^2.4.1",
+    "webpack": "^1.12.14"
   }
 }

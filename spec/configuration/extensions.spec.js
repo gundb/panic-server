@@ -4,7 +4,7 @@
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
 
 describe('Polyfill.js', function () {
-	var polyfill = require('../lib/polyfill');
+	var polyfill = require('../../lib/configuration/extensions');
 	describe('Object.keys', function () {
 		// cannot delete Object.keys for testing
 		// node internals depend on it
@@ -76,14 +76,14 @@ describe('Polyfill.js', function () {
 	describe('JSON function support', function () {
 		it('should allow you to stringify functions', function () {
 			var result = JSON.stringify(function () {});
-			expect(result.length > 0).toBe(true);
+			expect(result).toBeTruthy();
 		});
 
 		it('should provide a toJSON method', function () {
 			expect(Function.prototype.toJSON).toEqual(jasmine.any(Function));
 		});
 
-		it('should not be picky about where you put the functions', function () {
+		it('should allow functions anywhere in JSON', function () {
 			var result = JSON.stringify({
 				cb: function () {
 					// do stuff
@@ -91,16 +91,6 @@ describe('Polyfill.js', function () {
 			});
 			result = JSON.parse(result);
 			expect(result.cb).toBeTruthy();
-		});
-
-		it('should name a function when anonymous', function () {
-			var result = JSON.stringify(function () {});
-			expect(result).toMatch(/function \w+\(/);
-		});
-
-		it('should always start a function name with a letter', function () {
-			var result = JSON.stringify(function () {});
-			expect(result).toMatch(/function \D/);
 		});
 	});
 
@@ -114,6 +104,16 @@ describe('Polyfill.js', function () {
 				finished();
 			}));
 			Function.parse(string)(done);
+		});
+
+		it('should parse anonymous functions', function () {
+			var func = JSON.parse(JSON.stringify(function () {}));
+			Function.parse(func); // shouldn't throw
+		});
+
+		it('should parse named functions', function () {
+			var func = JSON.parse(JSON.stringify(function test() {}));
+			Function.parse(func); // shouldn't throw
 		});
 	});
 
