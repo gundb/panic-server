@@ -1,11 +1,11 @@
 /*jslint node: true, nomen: true*/
 'use strict';
 
-//require('../libb/polyfill');
 var express = require('express');
 var server = express();
 
 var port = process.argv[2] || 8080;
+var host = 'localhost';
 
 var path = require('path');
 var dist = path.join(__dirname, '../dist');
@@ -28,9 +28,11 @@ module.exports = {
 
 	router: server,
 
+	host: host,
+
 	// return the full URL
 	toString: function () {
-		return 'http://localhost:' + port + '/';
+		return 'http://' + host + ':' + port + '/';
 	}
 };
 
@@ -53,4 +55,4 @@ server.post('/done', function (req, res) {
 	module.exports.done.apply(this, arguments);
 });
 
-server.listen(port);
+server.listen(port, host);

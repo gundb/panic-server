@@ -1,5 +1,5 @@
 /*jslint node: true*/
-/*global jasmine, describe, it, expect*/
+/*global jasmine, describe, it, expect, pending*/
 'use strict';
 
 
@@ -23,13 +23,22 @@ describe('The test function', function () {
 		});
 	});
 
-	it('should allow you to name tests', function (done) {
-		test('Named test', done);
+	it('should allow you to name tests', function () {
+		var called = false;
+		test('Named test', function () {
+			called = true;
+		});
+		expect(called).toBe(true);
 	});
 
-	it('should pass the context as arg1', function () {
+	it('should pass the context as arg0', function () {
 		test(function (ctx) {
 			expect(ctx).toEqual(jasmine.any(Context));
 		});
+	});
+
+	it('should remember the test name', function () {
+		var result = test('fabulous success', function () {});
+		expect(result.description).toBe('fabulous success');
 	});
 });

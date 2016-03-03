@@ -13,6 +13,14 @@ describe('The router', function () {
 		expect(stringy).toBe(true);
 	});
 
+	it('should export the current port', function () {
+		expect(route.port).toEqual(jasmine.any(Number));
+	});
+
+	it('should export the hostname', function () {
+		expect(route.host).toEqual(jasmine.any(String));
+	});
+
 	it('should return the full URL when `toString`ed', function () {
 		expect(route.toString()).toMatch(/http/i);
 	});
