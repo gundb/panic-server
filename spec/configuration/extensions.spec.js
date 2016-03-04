@@ -1,11 +1,12 @@
 /*global jasmine, describe, it, expect, beforeAll*/
 /*jslint node: true*/
 'use strict';
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
 
-describe('Polyfill.js', function () {
+var Gun = require('gun/gun');
+
+describe('The extension', function () {
 	var polyfill = require('../../lib/configuration/extensions');
-	describe('Object.keys', function () {
+	describe('keys method', function () {
 		// cannot delete Object.keys for testing
 		// node internals depend on it
 		var keys = polyfill.keys;
@@ -44,7 +45,7 @@ describe('Polyfill.js', function () {
 		});
 	});
 
-	describe('values', function () {
+	describe('values method', function () {
 		var values = polyfill.values;
 		it('should be a function', function () {
 			expect(values).toEqual(jasmine.any(Function));
@@ -94,7 +95,7 @@ describe('Polyfill.js', function () {
 		});
 	});
 
-	describe('Function.parse', function () {
+	describe('parse method', function () {
 		it('should be a function', function () {
 			expect(Function.parse).toEqual(jasmine.any(Function));
 		});
@@ -117,9 +118,7 @@ describe('Polyfill.js', function () {
 		});
 	});
 
-	describe('gun.each', function () {
-		var Gun = require('gun/gun');
-
+	describe('gun.each method', function () {
 		it('should be a function', function () {
 			expect(Gun.chain.each).toEqual(jasmine.any(Function));
 		});

@@ -4,8 +4,8 @@
 
 var bump = require('../../server/bump');
 var route = require('../../server/index');
-var axios = require('axios');
 var event = require('../../server/events');
+var axios = require('axios');
 var root = String(route);
 
 describe('The bump function', function () {
