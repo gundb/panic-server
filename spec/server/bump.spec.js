@@ -5,6 +5,7 @@
 var bump = require('../../server/bump');
 var route = require('../../server/index');
 var axios = require('axios');
+var event = require('../../server/events');
 var root = String(route);
 
 describe('The bump function', function () {
@@ -24,5 +25,18 @@ describe('The bump function', function () {
 			expect(res.data.success).toBe(true);
 			done();
 		});
+	});
+
+	it('should emit the "begin" event', function (done) {
+		event.on('begin', done);
+		bump({});
+	});
+
+	it('should provide the context to the "begin" cb', function () {
+		var obj = {};
+		event.on('begin', function (ctx) {
+			expect(ctx).toBe(obj);
+		});
+		bump(obj);
 	});
 });

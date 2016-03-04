@@ -1,5 +1,5 @@
+/*global jasmine, describe, it, expect*/
 /*jslint node: true*/
-/*global jasmine, describe, it, expect, pending*/
 'use strict';
 
 
@@ -35,6 +35,11 @@ describe('The test function', function () {
 		test(function (ctx) {
 			expect(ctx).toEqual(jasmine.any(Context));
 		});
+	});
+
+	it('should name tests without a name "Anonymous"', function () {
+		var result = test(function () {});
+		expect(result.description).toBe('Anonymous');
 	});
 
 	it('should remember the test name', function () {
