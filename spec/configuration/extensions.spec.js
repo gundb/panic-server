@@ -116,6 +116,12 @@ describe('The extension', function () {
 			var func = JSON.parse(JSON.stringify(function test() {}));
 			Function.parse(func); // shouldn't throw
 		});
+
+		it('should return the value if not a function', function () {
+			expect(Function.parse('true')).toBe(true);
+			expect(Function.parse(true)).toBe(true);
+			expect(Function.parse('5')).toBe(5);
+		});
 	});
 
 	describe('gun.each method', function () {
