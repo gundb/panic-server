@@ -4,8 +4,8 @@
 
 
 // should import test
-var test = require('../../lib');
-var Context = require('../../lib/framework/Context');
+var test = require('../../src');
+var Context = require('../../src/framework/Context');
 
 describe('The test function', function () {
 	it('should be a function', function () {

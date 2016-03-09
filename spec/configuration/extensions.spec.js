@@ -2,131 +2,37 @@
 /*jslint node: true*/
 'use strict';
 
-var Gun = require('gun/gun');
+require('../../src/configuration/extensions');
 
-describe('The extension', function () {
-	var polyfill = require('../../lib/configuration/extensions');
-	describe('keys method', function () {
-		// cannot delete Object.keys for testing
-		// node internals depend on it
-		var keys = polyfill.keys;
-
-		it('should be a function', function () {
-			expect(polyfill.keys).toEqual(jasmine.any(Function));
-		});
-
-		it('should return an array', function () {
-			expect(keys({})).toEqual(jasmine.any(Array));
-		});
-
-		// more specifically, it will replace it if it doesn't exist
-		it('should return an array', function () {
-			expect(keys({
-				1: 1
-			}).length).toBe(1);
-		});
-
-		it('should not fail without input', function () {
-			expect(keys).not.toThrow();
-		});
-
-		it('should survive bad inputs', function () {
-			keys(null); // shouldn't throw
-			keys(undefined); // shouldn't throw
-			keys(0); // shouldn't throw
-			keys(NaN); // shouldn't throw
-			keys(Infinity); // shouldn't throw
-		});
-
-		it('should return a list of keys', function () {
-			expect(keys({
-				name: true
-			})[0]).toBe('name');
-		});
+describe('String.random', function () {
+	it('should be a function', function () {
+		expect(String.random).toEqual(jasmine.any(Function));
 	});
 
-	describe('values method', function () {
-		var values = polyfill.values;
-		it('should be a function', function () {
-			expect(values).toEqual(jasmine.any(Function));
-		});
-
-		it('should return an array', function () {
-			expect(values({})).toEqual(jasmine.any(Array));
-		});
-
-		it('should return a list of object values', function () {
-			expect(values({
-				1: 5
-			})[0]).toBe(5);
-		});
-
-		it('should be able to handle no input', function () {
-			expect(values).not.toThrow();
-		});
-
-		it('should be able to handle bad input', function () {
-			values(null); // shouldn't throw
-			values(undefined); // shouldn't throw
-			values(NaN); // shouldn't throw
-			values(Infinity); // shouldn't throw
-			values(0); // shouldn't throw
-		});
+	it('should return an empty string without input', function () {
+		expect(String.random()).toEqual(jasmine.any(String));
 	});
 
-	describe('JSON function support', function () {
-		it('should allow you to stringify functions', function () {
-			var result = JSON.stringify(function () {});
-			expect(result).toBeTruthy();
-		});
-
-		it('should provide a toJSON method', function () {
-			expect(Function.prototype.toJSON).toEqual(jasmine.any(Function));
-		});
-
-		it('should allow functions anywhere in JSON', function () {
-			var result = JSON.stringify({
-				cb: function () {
-					// do stuff
-				}
-			});
-			result = JSON.parse(result);
-			expect(result.cb).toBeTruthy();
-		});
+	it('should set the length by arg0', function () {
+		expect(String.random(10).length).toBe(10);
 	});
 
-	describe('parse method', function () {
-		it('should be a function', function () {
-			expect(Function.parse).toEqual(jasmine.any(Function));
-		});
-
-		it('should parse stringified functions', function (done) {
-			var string = JSON.parse(JSON.stringify(function (finished) {
-				finished();
-			}));
-			Function.parse(string)(done);
-		});
-
-		it('should parse anonymous functions', function () {
-			var func = JSON.parse(JSON.stringify(function () {}));
-			Function.parse(func); // shouldn't throw
-		});
-
-		it('should parse named functions', function () {
-			var func = JSON.parse(JSON.stringify(function test() {}));
-			Function.parse(func); // shouldn't throw
-		});
-
-		it('should return the value if not a function', function () {
-			expect(Function.parse('true')).toBe(true);
-			expect(Function.parse(true)).toBe(true);
-			expect(Function.parse('5')).toBe(5);
-		});
+	it('should survive negative input', function () {
+		expect(String.random(-5).length).toBe(0);
 	});
 
-	describe('gun.each method', function () {
-		it('should be a function', function () {
-			expect(Gun.chain.each).toEqual(jasmine.any(Function));
-		});
+	it('should default to 10 chars long', function () {
+		expect(String.random().length).toBe(10);
+	});
+});
+
+describe('function.toJSON', function () {
+	var proto = Function.prototype;
+	it('should be a function', function () {
+		expect(proto.toJSON).toEqual(jasmine.any(Function));
+	});
+
+	it('should just be (function).toString', function () {
+		expect(proto.toJSON).toBe(proto.toString);
 	});
 });

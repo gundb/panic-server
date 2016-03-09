@@ -2,7 +2,7 @@
 /*jslint node: true*/
 'use strict';
 
-var Response = require('../../lib/configuration/Response');
+var Response = require('../../src/configuration/Response');
 
 describe('The Response constructor', function () {
 	it('should be a function', function () {

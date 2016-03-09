@@ -91,3 +91,57 @@ test('Client sync', function () {
 
 });
 
+
+
+
+
+
+
+test('Server push', function () {
+	'use strict';
+	var responses = 0;
+	this.ready(function (res) {
+		responses += 1;
+		return responses === 5;
+	});
+
+	this.all(function () {
+		this.env.gun = new Gun('localhost:8080/gun');
+	});
+
+	this.fail('Reason');
+
+	this.browser(function () {
+		this.times(20, function (val) {
+			return gun.path(val).put({
+				data: true
+			});
+		});
+	});
+
+	this.server(function () {
+		this.env.gun
+	});
+
+
+});
+
+
+var Context = require('./lib/framework/context');
+
+// if the test succeeds
+Context.prototype.success = function () {
+	var test, total = {};
+	test = this;
+	this.done(function (done) {
+		total[done.peer] = done.status;
+		var keys = Object.keys(total);
+		if (test.peers === keys.length) {
+			var success = !Object.values(total).find(function (win) {
+				return !win;
+			});
+		}
+	});
+};
+
+

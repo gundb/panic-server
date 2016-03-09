@@ -12,16 +12,17 @@ Context.prototype = {
 	constructor: Context,
 
 	server: function (cb, args) {
-		this.config.cbs.push(cb);
+		this.config.cbs.push({
+			conditional: 'typeof global !== "undefined"',
+			cb: cb
+		});
 		return this;
 	},
 
 	client: function (cb, args) {
 		this.config.cbs.push({
 			args: args,
-			condition: function () {
-				return typeof window !== 'undefined';
-			},
+			conditional: "typeof window !== 'undefined'",
 			cb: cb
 		});
 	}

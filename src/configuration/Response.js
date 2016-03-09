@@ -4,7 +4,6 @@
 // deeply merge objects
 var assign = require('object-assign-deep');
 var defaults = require('./defaults');
-var Gun = require('gun/gun');
 
 /*
 	This is the test configuration constructor.
@@ -13,7 +12,7 @@ var Gun = require('gun/gun');
 	dynamically by "Context.js".
 */
 function Response(obj) {
-	this.testID = Gun.text.random();
+	this.testID = String.random();
 
 	// provide defaults
 	assign(this, defaults);

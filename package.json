@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jasmine",
-    "start": "node server/server.js",
+    "start": "node server",
     "build": "webpack --watch"
   },
   "repository": {
@@ -26,11 +26,8 @@
   },
   "homepage": "https://github.com/PsychoLlama/panic#readme",
   "dependencies": {
-    "axios": "^0.9.1",
-    "body-parser": "^1.15.0",
-    "express": "^4.13.3",
-    "gun": "^0.3.1",
-    "object-assign-deep": "0.0.4"
+    "object-assign-deep": "0.0.4",
+    "socket.io": "^1.4.5"
   },
   "devDependencies": {
     "jasmine": "^2.4.1",
