@@ -24,16 +24,4 @@ describe('The Response constructor', function () {
 		var keys = Object.keys(new Response());
 		expect(keys.length).toBeGreaterThan(0);
 	});
-
-	it('should produce a test ID string', function () {
-		var id = new Response().testID;
-		expect(id).toEqual(jasmine.any(String));
-	});
-
-	it('should produce unique IDs for each instance', function () {
-		var id2, id1;
-		id1 = new Response().testID;
-		id2 = new Response().testID;
-		expect(id1).not.toBe(id2);
-	});
 });

@@ -5,6 +5,8 @@
 
 // should import test
 var test = require('../../src');
+var Emitter = require('events');
+var stack = require('../../src/framework/stack');
 
 describe('The test function', function () {
 	it('should be a function', function () {
@@ -14,6 +16,28 @@ describe('The test function', function () {
 
 	it('should take a function and invoke it', function (done) {
 		test(done);
+	});
+
+	it('should assign an ID to each test', function () {
+		var result = test(function () {});
+		expect(result.ID).toEqual(jasmine.any(String));
+	});
+
+	it('should provide unique IDs', function () {
+		var ID2, ID1;
+		ID1 = test(function () {}).ID;
+		ID2 = test(function () {}).ID;
+		expect(ID1).not.toBe(ID2);
+	});
+
+	it('should expose the connected runners', function () {
+		var runners = test(function () {}).runners;
+		expect(runners).toEqual(jasmine.any(Object));
+	});
+
+	it('should inherit from EventEmitter', function () {
+		var instance = test(function () {});
+		expect(instance instanceof Emitter).toBe(true);
 	});
 
 	it('should invoke with a new test context', function () {
@@ -40,6 +64,13 @@ describe('The test function', function () {
 	it('should remember the test name', function () {
 		var result = test('fabulous success', function () {});
 		expect(result.description).toBe('fabulous success');
+	});
+
+	it('should push the test onto the stack', function () {
+		stack.next = [];
+		stack.current = {};
+		test(function () {});
+		expect(stack.next.length).toBe(1);
 	});
 });
 

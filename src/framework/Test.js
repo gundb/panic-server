@@ -2,7 +2,12 @@
 'use strict';
 
 var Response = require('../configuration/Response');
-var bump = require('../../server/bump');
+var assign = require('object-assign-deep');
+var Emitter = require('events');
+var stack = require('./stack');
+
+// String.random
+require('../configuration/extensions');
 
 function Test(name, cb, time) {
 	if (!(this instanceof Test)) {
@@ -11,6 +16,9 @@ function Test(name, cb, time) {
 	if (!cb) {
 		cb = name;
 	}
+
+	this.ID = String.random();
+	this.runners = {};
 
 	if (typeof name === 'string') {
 		this.description = name;
@@ -21,13 +29,14 @@ function Test(name, cb, time) {
 	this.config = new Response();
 	cb.call(this, this);
 
-	/*
-		I need some mechanism to kick
-		off the test stack.
-	*/
+	stack.push(this);
 }
 
-Test.prototype = {
+// inherit from EventEmitter
+Test.prototype = new Emitter();
+
+// superclass the Emitter instance
+assign(Test.prototype, {
 	constructor: Test,
 
 	server: function (cb, args) {
@@ -45,6 +54,6 @@ Test.prototype = {
 			cb: cb
 		});
 	}
-};
+});
 
 module.exports = Test;

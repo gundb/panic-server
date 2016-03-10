@@ -9,10 +9,9 @@ var defaults = require('./defaults');
 	This is the test configuration constructor.
 	An instance is created each time a new
 	`test()` is declared, and is later configured
-	dynamically by "Context.js".
+	dynamically through the test.
 */
 function Response(obj) {
-	this.testID = String.random();
 
 	// provide defaults
 	assign(this, defaults);
