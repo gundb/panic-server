@@ -37,7 +37,7 @@ describe('The test function', function () {
 
 	it('should inherit from EventEmitter', function () {
 		var instance = test(function () {});
-		expect(instance instanceof Emitter).toBe(true);
+		expect(instance).toEqual(jasmine.any(Emitter));
 	});
 
 	it('should invoke with a new test context', function () {
