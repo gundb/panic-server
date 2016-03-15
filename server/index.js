@@ -7,6 +7,12 @@ var io = require('socket.io');
 var server;
 
 
+function subscribe(socket) {
+	socket.on('connection', function (client) {
+		server.events.emit('join', client);
+	});
+}
+
 function open(port) {
 
 	// set default port
@@ -20,6 +26,8 @@ function open(port) {
 	// update state
 	server.port = port;
 	server.socket = io(port);
+
+	subscribe(server.socket);
 	return server.socket;
 }
 

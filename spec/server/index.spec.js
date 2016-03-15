@@ -8,6 +8,7 @@ process.argv[2] = 3000;
 var server = require('../../server');
 var Emitter = require('events');
 var Socket = require('socket.io');
+var io = require('socket.io-client');
 
 describe('The socket server', function () {
 	it('should have an event emitter', function () {
@@ -52,5 +53,20 @@ describe('The socket server', function () {
 
 	it('should expose the port number', function () {
 		expect(server.hasOwnProperty('port')).toBe(true);
+	});
+
+	it('should notify when clients join', function (done) {
+		server.open(8080);
+		server.events.on('join', done);
+		io('http://localhost:8080');
+	});
+
+	it('should pass the client obj on join', function (done) {
+		server.open(8080);
+		server.events.on('join', function (client) {
+			expect(client).toEqual(jasmine.any(Object));
+			done();
+		});
+		io('http://localhost:8080');
 	});
 });
