@@ -3,7 +3,7 @@
 
 var Emitter = require('events');
 var assign = require('object-assign-deep');
-var server = require('../server');
+var server = require('../../server');
 var stack;
 
 function push(test) {
