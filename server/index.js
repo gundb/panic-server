@@ -2,14 +2,14 @@
 'use strict';
 
 var Emitter = require('events');
-
+var assign = require('object-assign-deep');
 var io = require('socket.io');
 var server;
 
 
 function subscribe(socket) {
 	socket.on('connection', function (client) {
-		server.events.emit('join', client);
+		server.emit('join', client);
 	});
 }
 
@@ -18,22 +18,31 @@ function open(port) {
 	// set default port
 	port = port || 8080;
 
-	// close old socket
-	if (server.socket) {
-		server.socket.close();
+	// don't try to re-open
+	if (server.sockets[port]) {
+		return server.sockets[port];
 	}
 
 	// update state
-	server.port = port;
-	server.socket = io(port);
+	var socket = io(port);
+	server.sockets[port] = socket;
 
-	subscribe(server.socket);
-	return server.socket;
+	subscribe(socket);
+	return socket;
 }
 
-module.exports = server = {
-	events: new Emitter(),
-	socket: null,
+function close(port) {
+	var socket = server.sockets[port];
+	if (socket) {
+		socket.close();
+	}
+	return socket;
+}
+
+server = module.exports = new Emitter();
+assign(module.exports, {
+	sockets: {},
 	port: null,
-	open: open
-};
+	open: open,
+	close: close
+});

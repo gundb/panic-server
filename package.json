@@ -2,7 +2,7 @@
   "name": "panic",
   "version": "0.1.0",
   "description": "Test gun against a storm of requests",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "jasmine",
     "start": "node server",

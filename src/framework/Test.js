@@ -39,6 +39,11 @@ Test.prototype = new Emitter();
 assign(Test.prototype, {
 	constructor: Test,
 
+	env: function (obj) {
+		assign(this.config.env, obj);
+		return this;
+	},
+
 	server: function (cb, args) {
 		this.config.cbs.push({
 			conditional: 'typeof global !== "undefined"',
@@ -47,12 +52,12 @@ assign(Test.prototype, {
 		return this;
 	},
 
-	client: function (cb, args) {
+	client: function (cb) {
 		this.config.cbs.push({
-			args: args,
 			conditional: 'typeof window !== "undefined"',
 			cb: cb
 		});
+		return this;
 	}
 });
 
