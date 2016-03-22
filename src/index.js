@@ -9,15 +9,11 @@ module.exports = Test;
 
 global.test('Panic client', function () {
 	this.env({
-		msg: "You are"
+		working: true
 	});
 
-	this.env({
-		status: 'amazing'
-	});
-
-	this.client(function () {
-		console.log("We're online!");
+	this.client(function (ctx) {
+		console.log('Working:', ctx.env.working);
 	});
 });
 

@@ -6,10 +6,18 @@ var assign = require('object-assign-deep');
 var io = require('socket.io');
 var server;
 
-
 function subscribe(socket) {
 	socket.on('connection', function (client) {
-		server.emit('join', client);
+
+		server.emit('connection', client);
+
+		client.on('disconnect', function () {
+			server.emit('disconnect', client);
+		});
+
+		client.on('ready', function (ready) {
+			server.emit('ready', ready, client);
+		});
 	});
 }
 
@@ -35,12 +43,13 @@ function close(port) {
 	var socket = server.sockets[port];
 	if (socket) {
 		socket.close();
+		delete server.sockets[port];
 	}
 	return socket;
 }
 
-server = module.exports = new Emitter();
-assign(module.exports, {
+module.exports = new Emitter();
+assign(server = module.exports, {
 	sockets: {},
 	port: null,
 	open: open,

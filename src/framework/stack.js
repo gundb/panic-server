@@ -7,28 +7,33 @@ var server = require('../../server');
 var stack;
 
 function push(test) {
-	test.on('done', stack.shift);
+	stack.next.push(test);
 
 	if (!stack.current) {
-		stack.current = test;
-	} else {
-		stack.next.push(test);
+		stack.shift();
 	}
+
+	return test;
 }
 
 function shift() {
 	var test = stack.next.shift();
+
 	if (stack.current) {
 		stack.completed.push(stack.current);
 		stack.current = null;
 	}
 	if (test) {
+		// shift again when it's done
+		test.on('done', stack.shift);
 		stack.current = test;
+	} else {
+		return stack.emit('finished');
 	}
-	stack.emit('shift', stack.current);
+	stack.emit('change', stack.current);
 }
 
-module.exports = stack = new Emitter();
+stack = module.exports = new Emitter();
 assign(module.exports, {
 	current: null,
 	next: [],
@@ -37,11 +42,11 @@ assign(module.exports, {
 	shift: shift
 });
 
+
 /*
 	Our server won't be running
 	if there are no tests.
 */
-server.on('join', function (socket) {
-	console.log('Sending', stack.current);
+server.on('connection', function (socket) {
 	socket.emit('test', stack.current);
 });
