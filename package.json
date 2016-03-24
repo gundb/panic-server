@@ -5,8 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jasmine",
-    "start": "node server",
-    "build": "webpack --watch"
+    "start": "node server"
   },
   "repository": {
     "type": "git",

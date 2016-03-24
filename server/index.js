@@ -9,14 +9,23 @@ var server;
 function subscribe(socket) {
 	socket.on('connection', function (client) {
 
-		server.emit('connection', client);
-
 		client.on('disconnect', function () {
+			delete server.clients[client.PANIC_ID];
 			server.emit('disconnect', client);
 		});
 
-		client.on('ready', function (ready) {
-			server.emit('ready', ready, client);
+		client.on('ID', function (ID) {
+			client.PANIC_ID = ID;
+			server.clients[ID] = client;
+			server.emit('connection', client);
+		});
+
+		client.on('ready', function (testID) {
+			server.emit('ready', testID, client);
+		});
+
+		client.on('done', function (meta) {
+			server.emit('done', meta);
 		});
 	});
 }
@@ -51,7 +60,16 @@ function close(port) {
 module.exports = new Emitter();
 assign(server = module.exports, {
 	sockets: {},
+	clients: {},
 	port: null,
 	open: open,
 	close: close
+});
+
+server.on('run', function (ID) {
+	console.log('Running:', ID);
+	Object.keys(server.clients).forEach(function (key) {
+		var client = server.clients[key];
+		client.emit('run', ID);
+	});
 });

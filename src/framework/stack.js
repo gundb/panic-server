@@ -48,5 +48,8 @@ assign(module.exports, {
 	if there are no tests.
 */
 server.on('connection', function (socket) {
+	stack.on('change', function () {
+		socket.emit('test', stack.current);
+	});
 	socket.emit('test', stack.current);
 });
