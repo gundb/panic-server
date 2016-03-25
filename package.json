@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Test gun against a storm of requests",
   "main": "src/index.js",
+	"bin": {
+		"panic": "src/cli/index.js"
+	},
   "scripts": {
     "test": "jasmine",
     "start": "node server"
@@ -21,10 +24,11 @@
   "author": "Jesse Gibson <jesse@gundb.io> (http://techllama.com)",
   "license": "(Zlib OR MIT OR Apache-2.0)",
   "bugs": {
-    "url": "https://github.com/PsychoLlama/panic/issues"
+    "url": "https://github.com/PsychoLlama/panic-server/issues"
   },
   "homepage": "https://github.com/PsychoLlama/panic#readme",
   "dependencies": {
+    "glob": "^7.0.3",
     "object-assign-deep": "0.0.4",
     "socket.io": "^1.4.5"
   },

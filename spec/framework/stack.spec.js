@@ -1,64 +1,43 @@
-/*globals jasmine, describe, it, expect*/
+/*globals jasmine, describe, it, expect, beforeEach*/
 /*jslint node: true*/
 'use strict';
 
 var stack = require('../../src/framework/stack');
-var Emitter = require('events');
 
-describe('The test stack', function () {
-	it('should expose the current test', function () {
-		expect(stack.current).not.toBe(undefined);
-	});
+describe('The stack', function () {
+	var obj = {
+		on: function noop() {}
+	};
 
-	it('should inherit from EventEmitter', function () {
-		expect(stack).toEqual(jasmine.any(Emitter));
-	});
-
-	it('should have a list of upcoming tests', function () {
-		expect(stack.next).toEqual(jasmine.any(Array));
-	});
-
-	it('should have a list of completed tests', function () {
-		expect(stack.completed).toEqual(jasmine.any(Array));
-	});
-
-	it('should have a "push" function', function () {
-		expect(stack.push).toEqual(jasmine.any(Function));
-	});
-
-	describe('push function', function () {
-		it('should serve the first test', function () {
-			// clear the stack
+	describe('push method', function () {
+		it('should add to the stack', function () {
 			stack.next = [];
 			stack.current = null;
-			var obj = {};
 			stack.push(obj);
 			expect(stack.current).toBe(obj);
 		});
+	});
 
-		it('should respect queued tests', function () {
-			var obj = {};
-			// first
-			stack.push({});
-			// second in line
-			stack.push(obj);
-			expect(stack.current).not.toBe(obj);
+	describe('shift method', function () {
+		it('should change the current test', function () {
+			var last = stack.current;
+			stack.shift();
+			expect(last).not.toBe(stack.current);
 		});
 	});
 
-	it('should select the next test when done', function () {
-		var obj = {};
-		stack.next = [obj];
-		stack.emit('done');
-		expect(stack.current).toBe(obj);
-		expect(stack.next.length).toBe(0);
-	});
+	describe('events', function () {
+		it('should fire on change', function (done) {
+			stack.on('change', done);
+			stack.push(obj);
+			stack.shift();
+		});
 
-	it('should mark the last test as done', function () {
-		var obj;
-		stack.current = obj = {};
-		stack.completed = [];
-		stack.emit('done');
-		expect(stack.completed[0]).toBe(obj);
+		it('should fire on finish', function (done) {
+			stack.next = [];
+			stack.push(obj);
+			stack.on('finished', done);
+			stack.shift();
+		});
 	});
 });

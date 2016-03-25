@@ -13,19 +13,9 @@ test('Panic client', function () {
 		working: true
 	});
 
-	this.use(function () {
-		var thing = {};
-		this.env.thing = thing;
-		thing.thing = thing;
-	});
-
 	this.client(function (ctx) {
-		console.log(this.env.thing);
-		if (location.hash === '#wait') {
-			this.done();
-		} else {
-			setTimeout(this.done.bind(this), 5000);
-		}
+		console.log('Working:', this.env.working);
+		setTimeout(this.done, 5000);
 	});
 
 	this.peers(1);
@@ -34,8 +24,7 @@ test('Panic client', function () {
 test(function () {
 
 	this.client(function () {
-		console.log('WOOOOOOT!');
-		this.done();
+		setTimeout(this.done, 3000);
 	});
 
 	this.peers(1);

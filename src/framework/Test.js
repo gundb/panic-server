@@ -6,17 +6,10 @@ var assign = require('object-assign-deep');
 var Emitter = require('events');
 var stack = require('./stack');
 var server = require('../../server');
+var List = require('./ClientList');
 
 // String.random
 require('../configuration/extensions');
-
-function clients(test) {
-	var keys, length;
-	keys = Object.keys(test.runners);
-	return keys.filter(function (ID) {
-		return server.clients[ID];
-	});
-}
 
 function Test(name, cb) {
 	if (!(this instanceof Test)) {
@@ -28,8 +21,8 @@ function Test(name, cb) {
 		cb = name;
 	}
 
-	this.ID = String.random();
-	this.runners = {};
+	this.ID = String.random(10);
+	this.runners = new List();
 	Test.list[this.ID] = this;
 
 	if (typeof name === 'string') {
@@ -38,22 +31,13 @@ function Test(name, cb) {
 		this.description = 'Anonymous';
 	}
 
-	this.on('client', function (ID, client) {
-		this.runners[ID] = false;
-	});
-
 	this.config = new Response();
 	cb.call(this, this);
 
 	this.on('peer-done', function (meta) {
-		var length, keys, test = this;
-		test.runners[meta.clientID] = 'done';
-		keys = clients(test);
-		length = keys.filter(function (ID) {
-			return test.runners[ID];
-		}).length;
-		if (length === keys.length) {
-			test.emit('done');
+		this.runners.remove(meta.clientID);
+		if (!this.runners.length) {
+			this.end();
 		}
 	});
 
@@ -115,13 +99,15 @@ assign(Test.prototype, Emitter.prototype, {
 	 **/
 	peers: function (num) {
 		var test = this;
-		this.on('client', function () {
-			var length = clients(test).length;
-			if (length >= num) {
+		if (test.runners.length >= num) {
+			return test.run();
+		}
+		this.runners.on('add', function () {
+			if (test.runners.length >= num) {
 				test.run();
 			}
 		});
-		return this;
+		return test;
 	},
 
 	/*
@@ -146,8 +132,20 @@ assign(Test.prototype, Emitter.prototype, {
 			return;
 		}
 		this.hasEnded = true;
-		server.emit('done');
+		this.emit('done');
 		return this;
+	},
+
+	/*
+	 * Only send a subset of the
+	 * test to `JSON.stringify`.
+	 **/
+	toJSON: function () {
+		return {
+			ID: this.ID,
+			description: this.description,
+			config: this.config
+		};
 	}
 });
 
@@ -157,7 +155,7 @@ assign(Test.prototype, Emitter.prototype, {
  * let the corresponding test know.
  **/
 server.on('ready', function (testID, client) {
-	Test.list[testID].emit('client', client.PANIC_ID, client);
+	Test.list[testID].runners.add(client);
 });
 
 

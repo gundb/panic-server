@@ -2,27 +2,26 @@
 'use strict';
 
 var Emitter = require('events');
-var assign = require('object-assign-deep');
 var io = require('socket.io');
+var List = require('../src/framework/ClientList');
 var server;
+
+var clients = new List();
 
 function subscribe(socket) {
 	socket.on('connection', function (client) {
 
-		client.on('disconnect', function () {
-			delete server.clients[client.PANIC_ID];
-			server.emit('disconnect', client);
-		});
-
 		client.on('ID', function (ID) {
 			client.PANIC_ID = ID;
-			server.clients[ID] = client;
+			clients.add(client);
 			server.emit('connection', client);
 		});
 
 		client.on('ready', function (testID) {
 			server.emit('ready', testID, client);
 		});
+
+		client.on('event', server.emit.bind(server));
 
 		client.on('done', function (meta) {
 			server.emit('done', meta);
@@ -57,19 +56,18 @@ function close(port) {
 	return socket;
 }
 
-module.exports = new Emitter();
-assign(server = module.exports, {
-	sockets: {},
-	clients: {},
-	port: null,
-	open: open,
-	close: close
-});
+// Merge server with event emitter
+server = module.exports = new Emitter();
+server.sockets = {};
+server.port = null;
+server.open = open;
+server.close = close;
+server.clients = clients;
+
 
 server.on('run', function (ID) {
 	console.log('Running:', ID);
-	Object.keys(server.clients).forEach(function (key) {
-		var client = server.clients[key];
+	clients.each(function (client) {
 		client.emit('run', ID);
 	});
 });
