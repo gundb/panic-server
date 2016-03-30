@@ -6,7 +6,8 @@ var stack = require('../../src/framework/stack');
 
 describe('The stack', function () {
 	var obj = {
-		on: function noop() {}
+		on: function noop() {},
+		emit: function () {}
 	};
 
 	describe('push method', function () {
