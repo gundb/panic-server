@@ -1,7 +1,6 @@
-/*jslint node: true*/
+/*jslint node: true, nomen: true*/
 'use strict';
 
-var Response = require('../configuration/Response');
 var assign = require('object-assign-deep');
 var Emitter = require('events');
 var stack = require('./stack');
@@ -15,28 +14,51 @@ function Test(name, cb) {
 	if (!(this instanceof Test)) {
 		return new Test(name, cb);
 	}
-	assign(this, new Emitter());
+	this._events = {};
 
 	if (!cb) {
 		cb = name;
+		name = 'Anonymous';
 	}
 
 	this.ID = String.random(10);
 	this.runners = new List();
+	this.results = [];
 	Test.list[this.ID] = this;
 
-	if (typeof name === 'string') {
-		this.description = name;
-	} else {
-		this.description = 'Anonymous';
-	}
+	this.description = name;
 
-	this.config = new Response();
+	this.config = {
+		cbs: [],
+		env: {}
+	};
+
 	cb.call(this, this);
 
-	this.on('peer-done', function (meta) {
-		this.runners.remove(meta.clientID);
-		if (!this.runners.length) {
+	if (!this.listenerCount('stage')) {
+		var test = this;
+		this.on('stage', function () {
+			this.gather(function (client) {
+				client.emit('test', test);
+			});
+		});
+	}
+
+	this.on('peer-done', function (result) {
+		this.results.push(result);
+		var client, passed = true;
+		client = this.runners[result.clientID];
+		if (result.error) {
+			passed = false;
+			console.log(
+				'Failure (' + client.platform.name + '):',
+				result.error.message
+			);
+		}
+		if (this.results.length === this.runners.length) {
+			if (passed) {
+				console.log('Test "' + this.description + '" passed.');
+			}
 			this.end();
 		}
 	});
@@ -45,8 +67,10 @@ function Test(name, cb) {
 }
 
 
+Test.prototype = new Emitter();
+Test.prototype.setMaxListeners(Infinity);
 
-assign(Test.prototype, Emitter.prototype, {
+assign(Test.prototype, {
 	constructor: Test,
 
 	/*
@@ -116,10 +140,14 @@ assign(Test.prototype, Emitter.prototype, {
 	 **/
 	run: function () {
 		if (this.hasRun) {
-			return;
+			return this;
 		}
 		this.hasRun = true;
-		server.emit('run', this.ID);
+
+		console.log('Running:', this.description);
+
+		this.emit('run', this);
+		this.runners.broadcast('run', this.ID);
 		return this;
 	},
 
@@ -129,11 +157,27 @@ assign(Test.prototype, Emitter.prototype, {
 	 **/
 	end: function () {
 		if (this.hasEnded) {
-			return;
+			return this;
 		}
 		this.hasEnded = true;
-		this.emit('done');
+		this.emit('done', this);
 		return this;
+	},
+
+	/*
+	 * Grab each client as they
+	 * come in, until the test begins.
+	 * Good for filtering out
+	 * clients.
+	 **/
+	gather: function (cb) {
+		if (this.hasRun) {
+			return this;
+		}
+		server.clients.each(cb).on('add', cb);
+		return this.on('run', function () {
+			server.clients.removeListener('add', cb);
+		});
 	},
 
 	/*

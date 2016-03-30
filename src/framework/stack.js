@@ -27,6 +27,7 @@ function shift() {
 		// shift again when it's done
 		test.on('done', stack.shift);
 		stack.current = test;
+		test.emit('stage');
 	} else {
 		return stack.emit('finished');
 	}
@@ -34,22 +35,12 @@ function shift() {
 }
 
 stack = module.exports = new Emitter();
+stack.setMaxListeners(Infinity);
+
 assign(module.exports, {
 	current: null,
 	next: [],
 	completed: [],
 	push: push,
 	shift: shift
-});
-
-
-/*
-	Our server won't be running
-	if there are no tests.
-*/
-server.on('connection', function (socket) {
-	stack.on('change', function () {
-		socket.emit('test', stack.current);
-	});
-	socket.emit('test', stack.current);
 });

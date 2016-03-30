@@ -79,6 +79,18 @@ ClientList.prototype = {
 	},
 
 	/*
+	 * Emit to every connected
+	 * peer in the list.
+	 **/
+	broadcast: function () {
+		var args = Array.prototype.slice.call(arguments);
+		this.each(function (client) {
+			client.emit.apply(client, args);
+		});
+		return this;
+	},
+
+	/*
 	 * Return the number of
 	 * connected clients.
 	 **/

@@ -11,10 +11,11 @@ var clients = new List();
 function subscribe(socket) {
 	socket.on('connection', function (client) {
 
-		client.on('ID', function (ID) {
+		client.on('details', function (ID, platform) {
+			client.platform = platform;
 			client.PANIC_ID = ID;
+			client.setMaxListeners(Infinity);
 			clients.add(client);
-			server.emit('connection', client);
 		});
 
 		client.on('ready', function (testID) {
@@ -22,10 +23,6 @@ function subscribe(socket) {
 		});
 
 		client.on('event', server.emit.bind(server));
-
-		client.on('done', function (meta) {
-			server.emit('done', meta);
-		});
 	});
 }
 
@@ -35,39 +32,32 @@ function open(port) {
 	port = port || 8080;
 
 	// don't try to re-open
-	if (server.sockets[port]) {
-		return server.sockets[port];
+	if (server.socket) {
+		return server.socket;
 	}
 
 	// update state
 	var socket = io(port);
-	server.sockets[port] = socket;
+	server.socket = socket;
 
 	subscribe(socket);
 	return socket;
 }
 
 function close(port) {
-	var socket = server.sockets[port];
-	if (socket) {
+	var socket = server.socket;
+	if (server.socket) {
 		socket.close();
-		delete server.sockets[port];
+		server.socket = null;
 	}
 	return socket;
 }
 
 // Merge server with event emitter
 server = module.exports = new Emitter();
-server.sockets = {};
+server.setMaxListeners(Infinity);
+server.socket = null;
 server.port = null;
 server.open = open;
 server.close = close;
 server.clients = clients;
-
-
-server.on('run', function (ID) {
-	console.log('Running:', ID);
-	clients.each(function (client) {
-		client.emit('run', ID);
-	});
-});

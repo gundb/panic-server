@@ -1,5 +1,5 @@
 /*jslint node: true*/
-/*global Gun, test*/
+/*global Gun, test, expect*/
 
 'use strict';
 var Test = require('./framework/Test');
@@ -21,13 +21,26 @@ test('Panic client', function () {
 	this.peers(1);
 });
 
-test(function () {
+test('"fail" function', function () {
 
 	this.client(function () {
 		setTimeout(this.done, 3000);
+		this.fail('Test failed successfully.');
+	});
+
+	this.client(function () {
+		this.fail('This should not happen.');
 	});
 
 	this.peers(1);
+});
+
+test('Post-failed tests', function () {
+
+	this.client(function (ctx, done) {
+		setTimeout(done, 3000);
+	}).peers(1);
+
 });
 
 server.open(8080);
