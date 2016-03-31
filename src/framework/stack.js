@@ -16,20 +16,28 @@ function push(test) {
 	return test;
 }
 
+
 function shift() {
-	var test = stack.next.shift();
+	var last, test = stack.next.shift();
 
 	if (stack.current) {
-		stack.completed.push(stack.current);
+		last = stack.current;
+		stack.completed.push(last);
 		stack.current = null;
 	}
 	if (test) {
 		// shift again when it's done
-		test.on('done', stack.shift);
+		test.on('done', stack.shift).emit('stage');
 		stack.current = test;
-		test.emit('stage');
 	} else {
-		return stack.emit('finished');
+		stack.emit('last', last);
+		if (last.hasEnded) {
+			stack.emit('finished', last);
+		} else {
+			last.on('done', function () {
+				stack.emit('finished', last);
+			});
+		}
 	}
 	stack.emit('change', stack.current);
 }
@@ -37,7 +45,7 @@ function shift() {
 stack = module.exports = new Emitter();
 stack.setMaxListeners(Infinity);
 
-assign(module.exports, {
+assign(stack, {
 	current: null,
 	next: [],
 	completed: [],

@@ -6,8 +6,8 @@ var stack = require('../../src/framework/stack');
 
 describe('The stack', function () {
 	var obj = {
-		on: function noop() {},
-		emit: function () {}
+		on: function () { return obj; },
+		emit: function () { return obj; }
 	};
 
 	describe('push method', function () {
@@ -34,10 +34,10 @@ describe('The stack', function () {
 			stack.shift();
 		});
 
-		it('should fire on finish', function (done) {
+		it('should fire on the last test', function (done) {
 			stack.next = [];
 			stack.push(obj);
-			stack.on('finished', done);
+			stack.on('last', done);
 			stack.shift();
 		});
 	});
