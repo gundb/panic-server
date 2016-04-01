@@ -1,14 +1,10 @@
 {
   "name": "panic-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Test gun against a storm of requests",
   "main": "src/index.js",
-	"bin": {
-		"panic": "src/cli/index.js"
-	},
   "scripts": {
-    "test": "jasmine",
-    "start": "node server"
+    "test": "jasmine"
   },
   "repository": {
     "type": "git",
