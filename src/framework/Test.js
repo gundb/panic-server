@@ -94,6 +94,41 @@ assign(Test.prototype, {
 	},
 
 	/*
+	 * Spaghetti plantation
+	 **/
+	just: function (name, cb, valid) {
+		var sent, flag, condition, test = this;
+		test.JUST = test.JUST || {min: 0};
+		test.JUST.min += 1;
+		condition = String(function () {
+			return this.env.JUST === "NAME";
+		}).replace("NAME", name);
+		test.when(condition, cb);
+		test.gather(function (client) {
+			if (flag || test.JUST[client.PANIC_ID]) {
+				return;
+			}
+			if (valid && !valid(client)) {
+				return;
+			}
+			test.env({ JUST: name });
+			client.emit('test', test);
+			test.JUST[client.PANIC_ID] = flag = true;
+		});
+		test.runners.on('add', function () {
+			if (test.JUST.min <= test.runners.length) {
+				test.run();
+			}
+		});
+		test.on('client-done', function () {
+			if (test.results.length === test.runners.length) {
+				test.end();
+			}
+		});
+		return this;
+	},
+
+	/*
 	 * The minimum number of peers
 	 * needed to begin the test
 	 **/
