@@ -33,35 +33,11 @@ function Test(name, cb) {
 		env: {}
 	};
 
-	cb.call(this, this);
-
-	if (!this.listenerCount('stage')) {
-		var test = this;
-		this.on('stage', function () {
-			this.gather(function (client) {
-				client.emit('test', test);
-			});
-		});
-	}
-
-	this.on('peer-done', function (result) {
+	this.on('client-done', function (result) {
 		this.results.push(result);
-		var client, passed = true;
-		client = this.runners[result.clientID];
-		if (result.error) {
-			passed = false;
-			console.log(
-				'Failure (' + client.platform.name + '):',
-				result.error.message
-			);
-		}
-		if (this.results.length === this.runners.length) {
-			if (passed) {
-				console.log('Test "' + this.description + '" passed.');
-			}
-			this.end();
-		}
 	});
+
+	cb.call(this, this);
 
 	stack.push(this);
 }
@@ -121,14 +97,19 @@ assign(Test.prototype, {
 	 * The minimum number of peers
 	 * needed to begin the test
 	 **/
-	peers: function (num) {
+	needs: function (num, platform) {
 		var test = this;
-		if (test.runners.length >= num) {
-			return test.run();
-		}
-		this.runners.on('add', function () {
+		test.gather(function (client) {
+			client.emit('test', test);
+		});
+		test.runners.on('add', function () {
 			if (test.runners.length >= num) {
 				test.run();
+			}
+		});
+		test.on('client-done', function () {
+			if (test.results.length >= num) {
+				test.end();
 			}
 		});
 		return test;
@@ -143,8 +124,6 @@ assign(Test.prototype, {
 			return this;
 		}
 		this.hasRun = true;
-
-		console.log('Running:', this.description);
 
 		this.emit('run', this);
 		this.runners.broadcast('run', this.ID);
@@ -171,13 +150,18 @@ assign(Test.prototype, {
 	 * clients.
 	 **/
 	gather: function (cb) {
-		if (this.hasRun) {
-			return this;
+		var test = this;
+		if (test.hasRun) {
+			return test;
 		}
-		server.clients.each(cb).on('add', cb);
-		return this.on('run', function () {
-			server.clients.removeListener('add', cb);
+		test.on('stage', function () {
+			server.clients.each(cb).on('add', cb);
+			test.on('run', function () {
+				server.clients.removeListener('add', cb);
+			});
 		});
+
+		return this;
 	},
 
 	/*
@@ -199,7 +183,10 @@ assign(Test.prototype, {
  * let the corresponding test know.
  **/
 server.on('ready', function (testID, client) {
-	Test.list[testID].runners.add(client);
+	var test = Test.list[testID];
+	if (!test.hasRun) {
+		test.runners.add(client);
+	}
 });
 
 
@@ -208,7 +195,7 @@ server.on('ready', function (testID, client) {
  * notify the listeners.
  **/
 server.on('done', function (res) {
-	Test.list[res.testID].emit('peer-done', res);
+	Test.list[res.testID].emit('client-done', res);
 });
 
 Test.list = {};
