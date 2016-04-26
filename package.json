@@ -24,11 +24,10 @@
   },
   "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
-    "glob": "^7.0.3",
-    "object-assign-deep": "0.0.4",
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "eslint": "^2.8.0",
+    "mocha": "^2.4.5"
   }
 }
