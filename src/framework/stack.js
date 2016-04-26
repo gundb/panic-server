@@ -42,6 +42,16 @@ function shift() {
 	stack.emit('change', stack.current);
 }
 
+function reset() {
+	var test = stack.current;
+	stack.next = [];
+	if (test) {
+		test.end();
+	}
+	stack.current = null;
+	stack.emit('reset');
+}
+
 stack = module.exports = new Emitter();
 stack.setMaxListeners(Infinity);
 
@@ -50,5 +60,6 @@ assign(stack, {
 	next: [],
 	completed: [],
 	push: push,
-	shift: shift
+	shift: shift,
+	reset: reset
 });

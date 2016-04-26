@@ -1,14 +1,14 @@
 {
   "name": "panic-server",
   "version": "0.0.2",
-  "description": "Test gun against a storm of requests",
+  "description": "E2E distributed test framework",
   "main": "src/index.js",
   "scripts": {
     "test": "jasmine"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gundb/panic.git"
+    "url": "git+https://github.com/gundb/panic-server.git"
   },
   "keywords": [
     "gun",
@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/gundb/panic-server/issues"
   },
-  "homepage": "https://github.com/gundb/panic#readme",
+  "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
     "glob": "^7.0.3",
     "object-assign-deep": "0.0.4",

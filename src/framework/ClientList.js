@@ -22,10 +22,10 @@ ClientList.prototype = {
 			return list;
 		}
 
-		ID = client.PANIC_ID;
+		ID = client.platform.ID;
 
 		if (!ID) {
-			throw new Error('PanicError: No panic ID provided.');
+			throw new Error('No panic ID provided.');
 		}
 
 		list[ID] = client;
@@ -75,6 +75,21 @@ ClientList.prototype = {
 			cb(list[key], key, list);
 		}
 
+		return list;
+	},
+
+	/*
+	 * Return a new list of
+	 * filtered clients,
+	 * according to a callback.
+	 **/
+	filter: function (cb) {
+		var list = new ClientList();
+		this.each(function (client, ID, list) {
+			if (cb(client, ID, list)) {
+				list.add(client);
+			}
+		});
 		return list;
 	},
 

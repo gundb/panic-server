@@ -14,6 +14,7 @@ function subscribe(socket) {
 		client.on('details', function (ID, platform) {
 			client.platform = platform;
 			client.PANIC_ID = ID;
+			client.platform.ID = ID;
 			client.setMaxListeners(Infinity);
 			clients.add(client);
 		});

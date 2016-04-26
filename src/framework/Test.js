@@ -1,4 +1,4 @@
-/*jslint node: true, nomen: true*/
+/*jslint node: true, nomen: true, regexp: true*/
 'use strict';
 
 var assign = require('object-assign-deep');
@@ -6,6 +6,29 @@ var Emitter = require('events');
 var stack = require('./stack');
 var server = require('../../server');
 var List = require('./ClientList');
+var Agreement = require('./Agree');
+
+function match(exp, platform) {
+  var key, matching = true;
+
+  for (key in exp) {
+    if (exp.hasOwnProperty(key)) {
+      if (!platform || !platform.hasOwnProperty(key)) {
+        return false;
+      }
+      if (exp[key] instanceof RegExp) {
+        matching = matching && exp[key].test(platform[key]);
+      } else if (exp[key] instanceof Object) {
+        matching = matching && match(exp[key], platform[key]);
+      } else {
+        matching = matching && exp[key] === platform[key];
+      }
+    }
+  }
+
+	return matching;
+}
+
 
 // String.random
 require('../configuration/extensions');
@@ -21,6 +44,9 @@ function Test(name, cb) {
 		name = 'Anonymous';
 	}
 
+	this.agreement = new Agreement();
+	this.run = this.run.bind(this);
+	this.end = this.end.bind(this);
 	this.ID = String.random(10);
 	this.runners = new List();
 	this.results = [];
@@ -33,7 +59,7 @@ function Test(name, cb) {
 		env: {}
 	};
 
-	this.on('client-done', function (result) {
+	this.on('result', function (result) {
 		this.results.push(result);
 	});
 
@@ -94,60 +120,50 @@ assign(Test.prototype, {
 	},
 
 	/*
-	 * Spaghetti plantation
+	 * Send tests to a client subset
+	 * and measure their results against
+	 * "result" events.
 	 **/
-	just: function (name, cb, valid) {
-		var sent, flag, condition, test = this;
-		test.JUST = test.JUST || {min: 0};
-		test.JUST.min += 1;
-		condition = String(function () {
-			return this.env.JUST === "NAME";
-		}).replace("NAME", name);
-		test.when(condition, cb);
-		test.gather(function (client) {
-			if (flag || test.JUST[client.PANIC_ID]) {
-				return;
-			}
-			if (valid && !valid(client)) {
-				return;
-			}
-			test.env({ JUST: name });
+	just: function (runners, cb) {
+		var just, test = this;
+		just = test.JUST = test.JUST || {min: 0};
+		function decide(result) {
+			return result.length >= just.min;
+		}
+		test.agreement
+			.join('should run', decide)
+			.join('should end', decide);
+
+		test.on('run', function () {
+			just.min += runners.length;
+			runners.broadcast('run', test.ID);
+		});
+		runners.on('add', function (client) {
 			client.emit('test', test);
-			test.JUST[client.PANIC_ID] = flag = true;
+			test.run();
 		});
-		test.runners.on('add', function () {
-			if (test.JUST.min <= test.runners.length) {
-				test.run();
-			}
-		});
-		test.on('client-done', function () {
-			if (test.results.length === test.runners.length) {
-				test.end();
-			}
-		});
-		return this;
+		return test.on('result', test.end);
 	},
 
 	/*
 	 * The minimum number of peers
 	 * needed to begin the test
 	 **/
-	needs: function (num, platform) {
+	needs: function (num, runners) {
 		var test = this;
-		test.gather(function (client) {
+		runners = runners || /./;
+		runners = runners instanceof List ? runners : this.matching(runners);
+		test.on('run', function (client) {
+			runners.broadcast('run', test.ID);
+		});
+		test.agreement.join('should run', function () {
+			return runners.length >= num;
+		});
+		runners.on('add', function (client) {
 			client.emit('test', test);
+			test.run();
 		});
-		test.runners.on('add', function () {
-			if (test.runners.length >= num) {
-				test.run();
-			}
-		});
-		test.on('client-done', function () {
-			if (test.results.length >= num) {
-				test.end();
-			}
-		});
-		return test;
+		return test.on('result', test.end);
 	},
 
 	/*
@@ -155,13 +171,13 @@ assign(Test.prototype, {
 	 * sure that it only fires once.
 	 **/
 	run: function () {
-		if (this.hasRun) {
+		var agrees = this.agreement.all('should run', this.runners);
+		if (this.hasRun || !agrees) {
 			return this;
 		}
 		this.hasRun = true;
 
 		this.emit('run', this);
-		this.runners.broadcast('run', this.ID);
 		return this;
 	},
 
@@ -170,10 +186,12 @@ assign(Test.prototype, {
 	 * and notifies watchers.
 	 **/
 	end: function () {
-		if (this.hasEnded) {
+		var agrees = this.agreement.all('should end', this.results);
+		if (this.hasEnded || !agrees) {
 			return this;
 		}
 		this.hasEnded = true;
+
 		this.emit('done', this);
 		return this;
 	},
@@ -197,6 +215,29 @@ assign(Test.prototype, {
 		});
 
 		return this;
+	},
+
+	/*
+	 * Return a client list matching
+	 * a platform description. It will
+	 * update as clients join and leave.
+	 **/
+	matching: function (exp) {
+		var list, test = this;
+		list = new List();
+		if (!(exp instanceof Object) || exp instanceof RegExp) {
+			exp = {
+				name: exp
+			};
+		}
+		this.gather(function (client, ID) {
+			console.log('New client found');
+			if (match(exp, client.platform)) {
+				console.log('Match found:', exp);
+				list.add(client);
+			}
+		});
+		return list;
 	},
 
 	/*
@@ -229,8 +270,8 @@ server.on('ready', function (testID, client) {
  * When a client is done with a test,
  * notify the listeners.
  **/
-server.on('done', function (res) {
-	Test.list[res.testID].emit('client-done', res);
+server.on('done', function (result) {
+	Test.list[result.testID].emit('result', result);
 });
 
 Test.list = {};
