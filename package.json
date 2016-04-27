@@ -4,7 +4,7 @@
   "description": "E2E distributed test framework",
   "main": "src/index.js",
   "scripts": {
-    "test": "jasmine"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -24,9 +24,11 @@
   },
   "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
+    "bluebird": "^3.3.5",
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "eslint": "^2.8.0",
     "mocha": "^2.4.5"
   }
