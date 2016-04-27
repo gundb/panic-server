@@ -7,6 +7,7 @@ function ClientList() {
 	this.clients = {};
 }
 
+Function.prototype.toJSON = Function.prototype.toString;
 var API = ClientList.prototype = new Emitter();
 
 API.each = function (cb) {
@@ -50,7 +51,7 @@ API.filter = function (query) {
 		if (query instanceof Function && query(client, ID)) {
 			list.add(client);
 			return;
-		} else if (typeof query === 'string') {
+		} else if (typeof query === 'string' || query instanceof RegExp) {
 			query = {
 				name: query
 			};
@@ -66,9 +67,6 @@ API.filter = function (query) {
 };
 
 API.excluding = function (exclude) {
-	if (!(exclude instanceof ClientList)) {
-		throw new Error('Exclusion set is not a ClientList');
-	}
 	return this.filter(function (client) {
 		return !exclude.get(client.socket.id);
 	});
@@ -112,6 +110,13 @@ API.run = function (cb) {
 			.emit('run', cb, key);
 		});
 	});
+};
+
+API.set = function (name, data) {
+	function send(client) {
+		client.socket.emit('data', name, data);
+	}
+	return this.each(send).on('add', send);
 };
 
 module.exports = ClientList;

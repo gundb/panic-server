@@ -1,13 +1,13 @@
+'use strict';
 var io = require('socket.io');
 var fs = require('fs');
 var clients = require('./clients');
+var file = require.resolve('../../panic-client/panic.js');
 
 var server = require('http').createServer(function (req, res) {
-	if (req.url !== '/panic.js' && req.url !== '/') {
-		return;
+	if (req.url === '/panic.js' || req.url === '/') {
+		fs.createReadStream(file).pipe(res);
 	}
-	var path = require.resolve('../../panic-client/panic.js');
-	fs.createReadStream(path).pipe(res);
 });
 
 function open(config) {
@@ -17,10 +17,10 @@ function open(config) {
 
 	server.listen(config.port, config.hostname);
 
-	io(server).on('connection', function (client) {
-		client.on('handshake', function (platform) {
+	io(server).on('connection', function (socket) {
+		socket.on('handshake', function (platform) {
 			clients.add({
-				socket: client,
+				socket: socket,
 				platform: platform
 			});
 		});

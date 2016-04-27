@@ -1,3 +1,4 @@
+'use strict';
 function match(query, platform) {
 	var key, value, matches = true;
 	for (key in query) {
