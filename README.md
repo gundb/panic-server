@@ -111,6 +111,14 @@ panic.clients.on('remove', function (client, id) {
 
 <a name='clients'></a>
 > Every client inside a list is an object with two properties, `platform` and `socket`. The platform is sent as part of the client handshake, while the socket is a websocket interface provided by [`socket.io`](http://socket.io/).
+```javascript
+// each client has this structure
+var client = {
+	// the websocket is a socket.io interface
+	socket: WebSocket,
+	platform: { /* platformjs */ }
+}
+```
 
 **Table of Contents**
  - [`.filter()`](#filter)
@@ -201,7 +209,7 @@ var notChrome = browsers.excluding(chrome)
 ##### <a name='run'></a> `.run(Function[, Object])`
 `.run` is where the magic happens. This method allows you to evaluate a function on all platforms belonging to this list, and reject or resolve a promise when either everyone finishes or one fails. Asynchronous code is supported.
 
-`.run` takes on argument: the function to evaluate. It can be weird to think about, and may trip you up a couple times. **The function will not be run on panic-server. It is run on the client**, it does not have your local scope, and may not have your platform tools (like commonJS, window variables, npm modules, ES2015 compatibility, etc). You are potentially evaluating on an entirely different machine. Code responsibly :wink:
+`.run` takes one argument: the function to evaluate. It can be weird to think about, and may trip you up a couple times. **The function will not be run on panic-server. It is run on the client**, it does not have your local scope, and may not have your platform tools (like CommonJS, window variables, npm modules, ES2015 compatibility, etc). You are potentially evaluating on an entirely different machine. Code responsibly :wink:
 
 That said, here's an example:
 
@@ -212,7 +220,7 @@ clients.run(function () {
 
 clients.filter('Node.js').run(function () {
 	var http = require('http')
-	// evaluating live on the server
+	// evaluating live on every server
 });
 ```
 
