@@ -2,7 +2,7 @@
 var io = require('socket.io');
 var fs = require('fs');
 var clients = require('./clients');
-var file = require.resolve('../../panic-client/panic.js');
+var file = require.resolve('panic-client/panic.js');
 
 var server = require('http').createServer(function (req, res) {
 	if (req.url === '/panic.js' || req.url === '/') {
