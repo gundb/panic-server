@@ -112,11 +112,4 @@ API.run = function (cb, scope) {
 	});
 };
 
-API.set = function (name, data) {
-	function send(client) {
-		client.socket.emit('data', name, data);
-	}
-	return this.each(send).on('add', send);
-};
-
 module.exports = ClientList;

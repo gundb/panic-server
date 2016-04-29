@@ -1,6 +1,6 @@
 {
   "name": "panic-server",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Distributed Javascript runner",
   "main": "src/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
+
     "bluebird": "^3.3.5",
     "socket.io": "^1.4.5"
   },
