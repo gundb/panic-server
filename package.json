@@ -1,10 +1,10 @@
 {
   "name": "panic-server",
-  "version": "0.0.2",
-  "description": "E2E distributed test framework",
+  "version": "0.1.0",
+  "description": "Distributed Javascript runner",
   "main": "src/index.js",
   "scripts": {
-    "test": "jasmine"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -14,8 +14,10 @@
     "gun",
     "gundb",
     "test",
+		"eval",
     "testing",
-    "distributed"
+    "distributed",
+    "cross-platform"
   ],
   "author": "Jesse Gibson <jesse@gundb.io> (http://techllama.com)",
   "license": "(Zlib OR MIT OR Apache-2.0)",
@@ -24,11 +26,13 @@
   },
   "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
-    "glob": "^7.0.3",
-    "object-assign-deep": "0.0.4",
+
+    "bluebird": "^3.3.5",
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "chai": "^3.5.0",
+    "eslint": "^2.8.0",
+    "mocha": "^2.4.5"
   }
 }
