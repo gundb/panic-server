@@ -1,3 +1,4 @@
+/*eslint eqeqeq: "off"*/
 'use strict';
 function match(query, platform) {
 	var key, value, matches = true;
@@ -9,7 +10,8 @@ function match(query, platform) {
 		if (value instanceof RegExp) {
 			matches = matches && !!platform[key].match(value);
 		} else if (typeof value === 'string') {
-			matches = matches && platform[key] === value;
+			// loose type check the value
+			matches = matches && platform[key] == value;
 		} else if (value instanceof Object) {
 			return match(value, platform[key] || {});
 		}

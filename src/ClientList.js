@@ -83,7 +83,7 @@ API.len = function () {
 	return num;
 };
 
-API.run = function (cb) {
+API.run = function (cb, scope) {
 	var key, done = 0, list = this, length = this.len();
 	key = Math.random()
 	.toString(36)
@@ -107,7 +107,7 @@ API.run = function (cb) {
 				client.socket.removeListener('disconnect', add);
 			})
 			.once('disconnect', add)
-			.emit('run', cb, key);
+			.emit('run', cb, key, scope);
 		});
 	});
 };

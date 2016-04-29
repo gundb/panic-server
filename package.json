@@ -1,7 +1,7 @@
 {
   "name": "panic-server",
   "version": "0.0.2",
-  "description": "E2E distributed test framework",
+  "description": "Distributed Javascript runner",
   "main": "src/index.js",
   "scripts": {
     "test": "mocha"
@@ -14,8 +14,10 @@
     "gun",
     "gundb",
     "test",
+		"eval",
     "testing",
-    "distributed"
+    "distributed",
+    "cross-platform"
   ],
   "author": "Jesse Gibson <jesse@gundb.io> (http://techllama.com)",
   "license": "(Zlib OR MIT OR Apache-2.0)",
