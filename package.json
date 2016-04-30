@@ -14,7 +14,7 @@
     "gun",
     "gundb",
     "test",
-		"eval",
+    "eval",
     "testing",
     "distributed",
     "cross-platform"
@@ -26,8 +26,8 @@
   },
   "homepage": "https://github.com/gundb/panic-server#readme",
   "dependencies": {
-
     "bluebird": "^3.3.5",
+    "panic-client": "^0.1.0",
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
