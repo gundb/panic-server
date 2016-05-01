@@ -19,7 +19,7 @@ var panic = require('panic-server')
 // Start the server.
 // This is what you'll connect
 // to from a client.
-panic.serve({ port: 3000 })
+panic.server().listen(3000)
 
 // The list of all connected clients,
 // updating in real-time.
@@ -40,7 +40,7 @@ The `.run` command sends a function to be evaluated on every connected client at
 ```html
 <!--
 The port number and hostname are
-configured by `panic.serve()`
+configured using `panic.server()`
 -->
 <script src="http://localhost:3000"></script>
 <!--
@@ -50,7 +50,7 @@ As soon as it finishes loading,
 <script>
 	// this attempts to connect to your panic server
 	panic.server('http://localhost:3000')
-</script>	
+</script>
 ```
 
 **Server**
@@ -73,21 +73,76 @@ Panic-server consists of two parts:
  - the server
  - the clients
 
-The server is the simplest, so let's begin there.
+### `panic.server([http.Server])`
+If an [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server) is passed, panic will use it to configure [socket.io](http://socket.io/) and the `/panic.js` route will be added that servers up the [`panic-client`](https://github.com/gundb/panic-client) browser code.
 
-### `panic.serve([options])`
-Starts up a server, configurable with port and hostname.
+If no server is passed, a new one will be created.
 
-#### options
-The options are an object containing either a port or a hostname property.
+If you're not familiar with Node.js' http module, that's okay. The quickest way to get up and running is to call `.listen(8080)` which listens for requests on port 8080. In a browser, the url will look something like this: `http://localhost:8080/panic.js`.
 
+**Create a new server**
+```javascript
+var panic = require('panic-server')
 
-|    name    |  type  |   default   |
-|:----------:|:------:|:-----------:|
-|   `port`   | Number |     8080    |
-| `hostname` | String | 'localhost' |
+// create a new http server instance
+var server = panic.server()
 
-If no object is given, the defaults are assumed.
+// listen for requests on port 8080
+server.listen(8080)
+```
+
+**Reuse an existing one**
+```javascript
+var panic = require('panic-server')
+
+// create a new http server
+var server = require('http').createServer()
+
+server.on('request', doThings)
+server.on('request', doOtherThings)
+
+// pass it to panic
+panic.server(server)
+
+// start listening on a port
+server.listen(8080)
+```
+
+> If you want to listen on port 80 (the default for browsers), you may need to run node as `sudo`.
+
+Once you have a server listening, point browsers/servers to your address. If you're on a browser, you can import the code by pointing it to a script tag:
+
+```html
+<!-- Imports the "panic-client" browser code
+
+	The url depends on what
+	port/hostname you're listening on.
+-->
+<script src="http://localhost:8080/panic.js"></script>
+<script>
+	// once imported, panic exposes the "panic" global.
+	// `.server()` in this context will connect to the server.
+	panic.server('http://localhost:8080')
+</script>
+```
+
+> **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
+
+If you want to add a Node.js server, the only difference is how the code is imported. You'll need to install [`panic-client`](https://github.com/gundb/panic-client) for this.
+
+To install, run this:
+```bash
+npm install panic-client
+```
+
+**Node.js**
+```javascript
+// imports the node code for panic client
+var panic = require('panic-client')
+
+// connects to the server
+panic.server('http://localhost:8080')
+```
 
 ### `panic.clients`
 Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and subgrouping. `panic.clients` is the root level list, and contains every client currently connected.
@@ -160,9 +215,9 @@ Every setting above is optional, and you can create as loose or specific a query
 var firefox = clients.filter(function (client, id, list) {
 	// `id`: The unique client id
 	// `list`: The parent list object, in this case `clients`
-	
+
 	var platform = client.platform;
-	
+
 	/*
 		This query only adds versions of
 		Firefox later than version 36.
@@ -244,10 +299,10 @@ var browsers = clients.excluding(servers)
 function loadExpectJS(browser, done) {
 	// create a script element
 	var script = document.createElement('script')
-	
+
 	// set the source to expect.js
 	script.src = 'https://cdn.rawgit.com/Automattic/expect.js/master/index.js'
-	
+
 	script.onload = done;
 	script.onerror = this.fail;
 }
@@ -329,7 +384,7 @@ Alternatively, all variables are accessable in the `this.data` object:
 clients.run(function (client) {
 	// using `this.data`
 	console.log(this.data.localVariable) // 'visible'
-	
+
 	// the `client` param is the same as `this`
 	console.log(client.data.numbers) // array
 }, {
