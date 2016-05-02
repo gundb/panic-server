@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2
+Bug fix: `.excluding()` did not listen for remove events on exclusion lists. If a client was removed yet still connected, it wouldn't make it into the exclusion set.<br />
+Bug fix: the "add" event would fire each time you add the same client, even though it was already contained.
+Feature: New `clients.pluck(Number)` method will create a new list constrained to a maximum number of clients.
+
 ## v0.2.1
 The `ClientList` constructor has been exposed as `panic.ClientList`, and now accepts an array of smaller lists to pull from.
 

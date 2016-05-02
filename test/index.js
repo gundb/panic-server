@@ -53,6 +53,38 @@ describe('A clientList', function () {
 		expect(list.len()).to.eq(0);
 	});
 
+	it('should resolve a promise when all clients finish', function (done) {
+		client.socket.on('run', function (cb, jobID) {
+			client.socket.emit(jobID);
+		});
+		list.add(client).run(function () {})
+		.then(function () {
+			done();
+		})
+		.catch(done);
+	});
+
+	it('should reject a promise if an error is sent', function (done) {
+		client.socket.on('run', function (cb, job) {
+			client.socket.emit(job, 'fake error');
+		});
+		list.add(client).run(function () {})
+		.catch(function (err) {
+			expect(err).to.eq('fake error');
+			done();
+		});
+	});
+
+	it('should not emit "add" if it contains the client', function () {
+		var called = 0;
+		list.on('add', function () {
+			called += 1;
+		});
+		list.add(client);
+		list.add(client);
+		expect(called).to.eq(1);
+	});
+
 	describe('filter', function () {
 		it('should not mutate the original list', function () {
 			list.add(client);
@@ -87,27 +119,64 @@ describe('A clientList', function () {
 			var filtered = list.excluding(list);
 			expect(filtered.len()).to.eq(0);
 		});
+
+		it('should react to removals if they are connected', function () {
+			var decoy = new Client();
+			var exclusion = new ClientList()
+			.add(client)
+			.add(decoy);
+			var filtered = list.excluding(exclusion);
+			list.add(client).add(new Client());
+			expect(filtered.len()).to.eq(1);
+			exclusion.remove(client).remove(decoy);
+			expect(filtered.len()).to.eq(2);
+		});
 	});
 
-	it('should resolve a promise when all clients finish', function (done) {
-		client.socket.on('run', function (cb, jobID) {
-			client.socket.emit(jobID);
+	describe('number constraint', function () {
+		it('should return no more than the number requested', function () {
+			list.add(client)
+			.add(new Client())
+			.add(new Client());
+			expect(list.pluck(1).len()).to.eq(1);
 		});
-		list.add(client).run(function () {})
-		.then(function () {
-			done();
-		})
-		.catch(done);
-	});
 
-	it('should reject a promise if an error is sent', function (done) {
-		client.socket.on('run', function (cb, job) {
-			client.socket.emit(job, 'fake error');
+		it('should listen for additions', function () {
+			var subset = list.pluck(2);
+			expect(subset.len()).not.to.eq(2);
+			list.add(new Client()).add(new Client());
+			expect(subset.len()).to.eq(2);
+			list.add(new Client());
+			expect(subset.len()).to.eq(2);
 		});
-		list.add(client).run(function () {})
-		.catch(function (err) {
-			expect(err).to.eq('fake error');
-			done();
+
+		it('should replace a client when it disconnects', function () {
+			var subset = list.pluck(1);
+			list.add(client).add(new Client());
+			expect(subset.len()).to.eq(1);
+			client.socket.emit('disconnect');
+			// It should be replaced with
+			// the second connected client.
+			expect(subset.len()).to.eq(1);
+		});
+
+		it('should set a flag whether the constraint is met', function () {
+			var subset = list.pluck(1);
+			expect(subset.atCapacity).to.eq(false);
+			list.add(client);
+			expect(subset.atCapacity).to.eq(true);
+			client.socket.emit('disconnect');
+			expect(subset.atCapacity).to.eq(false);
+		});
+
+		it('should play well with exclusions', function () {
+			var bob, alice = list.pluck(1);
+			bob = list.excluding(alice).pluck(1);
+			list.add(client)
+			.add(new Client())
+			.add(new Client());
+			expect(alice.len()).to.eq(1);
+			expect(bob.len()).to.eq(1);
 		});
 	});
 });
