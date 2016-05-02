@@ -111,3 +111,32 @@ describe('A clientList', function () {
 		});
 	});
 });
+
+describe('The ClientList constructor', function () {
+	var list1, list2, client1, client2;
+
+	beforeEach(function () {
+		list1 = new ClientList();
+		list2 = new ClientList();
+		client1 = new Client();
+		client2 = new Client();
+		list1.add(client1);
+		list2.add(client2);
+	});
+
+	it('should accept an array of clientLists', function () {
+		var list = new ClientList([list1, list2]);
+
+		// it should contain both clients
+		expect(list.get(client1.socket.id)).to.eq(client1);
+		expect(list.get(client2.socket.id)).to.eq(client2);
+	});
+
+	it('should reactively add new clients from source lists', function () {
+		var list = new ClientList([list1, list2]);
+		var client3 = new Client();
+		expect(list.get(client3.socket.id)).to.eq(null);
+		list1.add(client3);
+		expect(list.get(client3.socket.id)).to.eq(client3);
+	});
+});

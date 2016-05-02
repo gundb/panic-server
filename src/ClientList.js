@@ -2,9 +2,18 @@
 var Emitter = require('events');
 var match = require('./matcher');
 var Promise = require('bluebird');
-function ClientList() {
+function ClientList(lists) {
+	var list = this;
 	Emitter.call(this);
-	this.clients = {};
+	list.clients = {};
+	function add(client) {
+		list.add(client);
+	}
+	if (lists instanceof Array) {
+		lists.forEach(function (list) {
+			list.each(add).on('add', add);
+		});
+	}
 }
 
 Function.prototype.toJSON = Function.prototype.toString;
