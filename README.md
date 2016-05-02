@@ -23,9 +23,9 @@ panic.server().listen(3000)
 
 // The list of all connected clients,
 // updating in real-time.
-panic.clients
+var clients = panic.clients
 
-panic.clients.run(function () {
+clients.run(function () {
 	console.log('This code runs on every client');
 }).then(function () {
 	// this runs when all clients have finished.
@@ -36,13 +36,14 @@ panic.clients.run(function () {
 
 The `.run` command sends a function to be evaluated on every connected client at that point in time. To add a client, you'll need to import the code and point it to the server.
 
+<a name='how-to-connect'></a>
 **Browser**
 ```html
 <!--
 The port number and hostname are
 configured using `panic.server()`
 -->
-<script src="http://localhost:3000"></script>
+<script src="http://localhost:3000/panic.js"></script>
 <!--
 As soon as it finishes loading,
 `panic` will be a global variable.
@@ -54,6 +55,15 @@ As soon as it finishes loading,
 ```
 
 **Server**
+
+The [`panic-client`](https://github.com/gundb/panic-client) code can be downloaded through [npm](https://www.npmjs.com/package/panic-client). To install it, run this in your terminal:
+
+```bash
+npm install panic-client
+```
+
+Now you can use it in Node.js:
+
 ```javascript
 // imports the client code
 var panic = require('panic-client')
@@ -72,6 +82,8 @@ Think of it as a control center for your code. You can pick out a group of clien
 Panic-server consists of two parts:
  - the server
  - the clients
+
+ Most of what panic's functionality comes from it's client interface, leaving the server as the simpler of the two. We'll start there.
 
 ### `panic.server([http.Server])`
 If an [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server) is passed, panic will use it to configure [socket.io](http://socket.io/) and the `/panic.js` route will be added that servers up the [`panic-client`](https://github.com/gundb/panic-client) browser code.
@@ -110,39 +122,9 @@ server.listen(8080)
 
 > If you want to listen on port 80 (the default for browsers), you may need to run node as `sudo`.
 
-Once you have a server listening, point browsers/servers to your address. If you're on a browser, you can import the code by pointing it to a script tag:
-
-```html
-<!-- Imports the "panic-client" browser code
-
-	The url depends on what
-	port/hostname you're listening on.
--->
-<script src="http://localhost:8080/panic.js"></script>
-<script>
-	// once imported, panic exposes the "panic" global.
-	// `.server()` in this context will connect to the server.
-	panic.server('http://localhost:8080')
-</script>
-```
+Once you have a server listening, point browsers/servers to your address ([here's how](#how-to-connect)).
 
 > **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
-
-If you want to add a Node.js server, the only difference is how the code is imported. You'll need to install [`panic-client`](https://github.com/gundb/panic-client) for this.
-
-To install, run this:
-```bash
-npm install panic-client
-```
-
-**Node.js**
-```javascript
-// imports the node code for panic client
-var panic = require('panic-client')
-
-// connects to the server
-panic.server('http://localhost:8080')
-```
 
 ### `panic.clients`
 Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and subgrouping. `panic.clients` is the root level list, and contains every client currently connected.
@@ -170,13 +152,13 @@ panic.clients.on('remove', function (client, id) {
 #### Methods
 
 <a name='clients'></a>
-> Every client inside a list is an object with two properties, `platform` and `socket`. The platform is sent as part of the client handshake, while the socket is a websocket interface provided by [`socket.io`](http://socket.io/).
+> Every client inside a list is an object with two properties, `platform` and `socket`. The platform (via [platform.js](https://github.com/bestiejs/platform.js/)) is sent as part of the client handshake, while the socket is a websocket interface provided by [`socket.io`](http://socket.io/).
 ```javascript
 // each client has this structure
 var client = {
 	// the websocket is a socket.io interface
 	socket: WebSocket,
-	platform: { /* platformjs */ }
+	platform: { /* platform.js */ }
 }
 ```
 
@@ -435,7 +417,7 @@ Returns the number of clients in a list.
 Returns the client corresponding to the id. Presently, socket.io's `socket.id` is used to uniquely key clients.
 
 ##### <a name='add'></a> `.add(client)`
-Manually adds a client to the list. This is low-level enough that you should never need it, though soon it may accept ClientList instances.
+Manually adds a client to the list. This is low-level enough that you should never need it. Clients have two properties, the platform and their socket, and are further explained [here](#clients).
 
 ##### <a name='remove'></a> `.remove(client)`
 Removes a client from the list, emitting a `remove` event with the client object. This API is low-level enough that you shouldn't need to use it.
