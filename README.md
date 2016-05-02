@@ -186,6 +186,7 @@ var client = {
 **Table of Contents**
  - [`.filter()`](#filter)
  - [`.excluding()`](#excluding)
+ - [`.pluck()`](#pluck)
  - [`.run()`](#run)
  - [`.len()`](#len)
  - [`.get()`](#get)
@@ -268,6 +269,33 @@ Like filter, you can chain queries off each other to create really powerful quer
 var chrome = browsers.filter('Chrome')
 var notChrome = browsers.excluding(chrome)
 ```
+
+##### <a name='pluck'></a> `.pluck(Number)`
+`.pluck` restricts the list length to a number, reactively listening for changes to ensure it's as close to the maximum as it can be. An excellent use case for `.pluck` is singling out clients of the same platform. This becomes especially powerful when paired with [`.excluding`](#excluding) and the `ClientList` constructor. For example, if you want to control 3 clients individually, it might look like this:
+
+```javascript
+var clients = panic.clients
+var List = panic.ClientList
+
+// grab one client from the list
+var alice = clients.pluck(1)
+
+// grab another, so long as it isn't alice
+var bob = clients
+.excluding(alice)
+.pluck(1)
+
+// and another, so long as it isn't alice or bob
+var carl = clients
+.excluding(
+	new List([ alice, bob ])
+)
+.pluck(1)
+```
+
+> `.pluck` is highly reactive, and will readjust itself to hold as many clients as possible.
+
+> **Warning:** the method name may change.
 
 ##### <a name='run'></a> `.run(Function[, Object])`
 `.run` is where the magic happens. This method allows you to evaluate a function on all platforms belonging to this list, and reject or resolve a promise when either everyone finishes or one fails. Asynchronous code is supported.

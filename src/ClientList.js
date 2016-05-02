@@ -30,15 +30,16 @@ API.each = function (cb) {
 };
 
 API.add = function (client) {
-	var list = this;
-	if (!client.socket.connected) {
+	var socket, list = this;
+	socket = client.socket;
+	if (!socket.connected || this.get(socket.id)) {
 		return this;
 	}
-	this.clients[client.socket.id] = client;
-	client.socket.on('disconnect', function () {
+	this.clients[socket.id] = client;
+	socket.on('disconnect', function () {
 		list.remove(client);
 	});
-	this.emit('add', client, client.socket.id);
+	this.emit('add', client, socket.id);
 	return this;
 };
 
@@ -76,9 +77,16 @@ API.filter = function (query) {
 };
 
 API.excluding = function (exclude) {
-	return this.filter(function (client) {
+	var self, list = this.filter(function (client) {
 		return !exclude.get(client.socket.id);
 	});
+	self = this;
+	exclude.on('remove', function (client) {
+		if (client.socket.connected && self.get(client.socket.id)) {
+			list.add(client);
+		}
+	});
+	return list;
 };
 
 API.len = function () {
@@ -120,5 +128,29 @@ API.run = function (cb, scope) {
 		});
 	});
 };
+
+API.pluck = function (num) {
+	var self, list = new ClientList();
+	self = this;
+	function measure(client) {
+		if (!list.atCapacity) {
+			list.add(client);
+		}
+	}
+	list.on('add', function () {
+		if (list.len() === num) {
+			list.atCapacity = true;
+		}
+	});
+	list.on('remove', function () {
+		list.atCapacity = false;
+		self.each(measure);
+	});
+	this.each(measure)
+	.on('add', measure);
+	return list;
+};
+
+API.atCapacity = false;
 
 module.exports = ClientList;
