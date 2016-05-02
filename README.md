@@ -370,8 +370,9 @@ browsers.run(loadExpectJS)
 ```
 
 ###### async/await
-If you're using Babel.js, promises become much more succinct using the ES7/2016 async/await controls, or if you're using the [`asyncawait`](https://www.npmjs.com/package/asyncawait) module on npm.
+If you're using Babel.js, promises become much more succinct using the ES7/2016 async/await controls, or alternatively [`asyncawait`](https://www.npmjs.com/package/asyncawait) on npm, or the [`co`](https://github.com/tj/co) module. I recommend checking them out, as it greatly improves the code readability.
 
+**Babel.js/ES2016**
 ```javascript
 // define an async function
 async function runCodeStuff () {
@@ -390,7 +391,22 @@ async function runCodeStuff () {
 }
 ```
 
-However, that syntax is completely optional.
+**co js**
+```javascript
+co(function * () {
+	yield browsers.run(function () {
+		// first code chunk
+	})
+
+	yield browsers.run(function () {
+		// second code chunk
+	})
+
+	console.log('Both code chunks finished!')
+})
+```
+
+However, that none of them are necessary to use panic-server.
 
 ##### `.run` scope controls
 This section is gonna be a little tricky, hold on...
