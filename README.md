@@ -127,7 +127,7 @@ Once you have a server listening, point browsers/servers to your address ([here'
 > **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
 
 ### `panic.clients`
-Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and subgrouping. `panic.clients` is the root level list, and contains every client currently connected.
+Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
 
 #### Events
 As the list changes, it will emit one of two mutation events:
@@ -148,6 +148,27 @@ panic.clients.on('remove', function (client, id) {
 	// a client has been removed
 })
 ```
+
+#### ClientList
+The list constructor is exposed as `panic.ClientList`, and is useful when composing large groups from smaller ones. For example, you might have a list of both Internet Explorer and Opera Mini clients that you want to join into a new list. To create a group containing both, you'd either write a complex filter, or you can make a new list that simply combines them. Here's what that looks like:
+
+```javascript
+// Grab the List constructor
+var List = panic.ClientList;
+
+var clients = panic.clients;
+
+// Get the list of IE browsers
+var IE = clients.filter('Internet Explorer');
+
+// Get the list of Opera browsers
+var opera = clients.filter('Opera Mini');
+
+// create a new list that represents both
+var pickyBrowsers = new List([ IE, opera ]);
+```
+
+If no array is given, an empty list is returned.
 
 #### Methods
 

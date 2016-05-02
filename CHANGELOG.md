@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.1
+The `ClientList` constructor has been exposed as `panic.ClientList`, and now accepts an array of smaller lists to pull from.
+
 ## v0.2.0
 `panic.serve` has been replaced with `panic.server`, which accepts `http.Server` instances instead of options.
 
