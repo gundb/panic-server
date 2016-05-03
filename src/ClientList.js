@@ -16,7 +16,6 @@ function ClientList(lists) {
 	}
 }
 
-Function.prototype.toJSON = Function.prototype.toString;
 var API = ClientList.prototype = new Emitter();
 
 API.each = function (cb) {
@@ -124,7 +123,7 @@ API.run = function (cb, scope) {
 				client.socket.removeListener('disconnect', add);
 			})
 			.once('disconnect', add)
-			.emit('run', cb, key, scope);
+			.emit('run', String(cb), key, scope);
 		});
 	});
 };

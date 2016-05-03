@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.3
+Improvement: remove the `Function.prototype.toJSON` extension.
+
 ## v0.2.2
 Bug fix: `.excluding()` did not listen for remove events on exclusion lists. If a client was removed yet still connected, it wouldn't make it into the exclusion set.<br />
 Bug fix: the "add" event would fire each time you add the same client, even though it was already contained.

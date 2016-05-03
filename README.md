@@ -4,7 +4,7 @@
 [![Travis branch](https://img.shields.io/travis/PsychoLlama/panic-server/master.svg?style=flat-square)](https://travis-ci.org/PsychoLlama/panic-server)
 [![npm](https://img.shields.io/npm/dt/panic-server.svg?style=flat-square)](https://www.npmjs.com/package/panic-server)
 [![npm](https://img.shields.io/npm/v/panic-server.svg?style=flat-square)](https://www.npmjs.com/package/panic-server)
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg?style=flat-square)](https://gitter.im/amark/gun)
+[![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun)
 
 > **TL;DR:**<br />
 It's a glorified `eval()` with platform queries.
