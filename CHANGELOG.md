@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.4
+Set the `constructor` property on the ClientList prototype.
+
 ## v0.2.3
 Improvement: remove the `Function.prototype.toJSON` extension.
 

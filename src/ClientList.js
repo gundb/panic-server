@@ -18,6 +18,8 @@ function ClientList(lists) {
 
 var API = ClientList.prototype = new Emitter();
 
+API.constructor = ClientList;
+
 API.each = function (cb) {
 	var key;
 	for (key in this.clients) {
