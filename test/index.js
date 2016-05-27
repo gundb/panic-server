@@ -35,22 +35,22 @@ describe('A clientList', function () {
 
 	it('should return length when "len()" is called', function () {
 		list.add(client);
-		expect(list.len()).to.eq(1);
+		expect(list.length).to.eq(1);
 		list.remove(client);
-		expect(list.len()).to.eq(0);
+		expect(list.length).to.eq(0);
 	});
 
 	it('should not add disconnected clients', function () {
 		client.socket.connected = false;
 		list.add(client);
-		expect(list.len()).to.eq(0);
+		expect(list.length).to.eq(0);
 	});
 
 	it('should remove a client on disconnect', function () {
 		list.add(client);
-		expect(list.len()).to.eq(1);
+		expect(list.length).to.eq(1);
 		client.socket.emit('disconnect');
-		expect(list.len()).to.eq(0);
+		expect(list.length).to.eq(0);
 	});
 
 	it('should resolve a promise when all clients finish', function (done) {
@@ -88,11 +88,11 @@ describe('A clientList', function () {
 	describe('filter', function () {
 		it('should not mutate the original list', function () {
 			list.add(client);
-			expect(list.len()).to.eq(1);
+			expect(list.length).to.eq(1);
 			list.filter(function () {
 				return false;
 			});
-			expect(list.len()).to.eq(1);
+			expect(list.length).to.eq(1);
 		});
 
 		it('should return a new, filtered list', function () {
@@ -101,15 +101,15 @@ describe('A clientList', function () {
 			var browsers = list.filter(function (client) {
 				return client.platform.name !== 'Node.js';
 			});
-			expect(servers.len()).to.eq(1);
-			expect(browsers.len()).to.eq(0);
+			expect(servers.length).to.eq(1);
+			expect(browsers.length).to.eq(0);
 		});
 
 		it('should be reactive to changes to the parent list', function () {
 			var servers = list.filter('Node.js');
-			expect(servers.len()).to.eq(0);
+			expect(servers.length).to.eq(0);
 			list.add(client);
-			expect(servers.len()).to.eq(1);
+			expect(servers.length).to.eq(1);
 		});
 	});
 
@@ -117,7 +117,7 @@ describe('A clientList', function () {
 		it('should not contain excluded clients', function () {
 			list.add(client);
 			var filtered = list.excluding(list);
-			expect(filtered.len()).to.eq(0);
+			expect(filtered.length).to.eq(0);
 		});
 
 		it('should react to removals if they are connected', function () {
@@ -127,9 +127,9 @@ describe('A clientList', function () {
 			.add(decoy);
 			var filtered = list.excluding(exclusion);
 			list.add(client).add(new Client());
-			expect(filtered.len()).to.eq(1);
+			expect(filtered.length).to.eq(1);
 			exclusion.remove(client).remove(decoy);
-			expect(filtered.len()).to.eq(2);
+			expect(filtered.length).to.eq(2);
 		});
 	});
 
@@ -138,26 +138,26 @@ describe('A clientList', function () {
 			list.add(client)
 			.add(new Client())
 			.add(new Client());
-			expect(list.pluck(1).len()).to.eq(1);
+			expect(list.pluck(1).length).to.eq(1);
 		});
 
 		it('should listen for additions', function () {
 			var subset = list.pluck(2);
-			expect(subset.len()).not.to.eq(2);
+			expect(subset.length).not.to.eq(2);
 			list.add(new Client()).add(new Client());
-			expect(subset.len()).to.eq(2);
+			expect(subset.length).to.eq(2);
 			list.add(new Client());
-			expect(subset.len()).to.eq(2);
+			expect(subset.length).to.eq(2);
 		});
 
 		it('should replace a client when it disconnects', function () {
 			var subset = list.pluck(1);
 			list.add(client).add(new Client());
-			expect(subset.len()).to.eq(1);
+			expect(subset.length).to.eq(1);
 			client.socket.emit('disconnect');
 			// It should be replaced with
 			// the second connected client.
-			expect(subset.len()).to.eq(1);
+			expect(subset.length).to.eq(1);
 		});
 
 		it('should set a flag whether the constraint is met', function () {
@@ -175,8 +175,8 @@ describe('A clientList', function () {
 			list.add(client)
 			.add(new Client())
 			.add(new Client());
-			expect(alice.len()).to.eq(1);
-			expect(bob.len()).to.eq(1);
+			expect(alice.length).to.eq(1);
+			expect(bob.length).to.eq(1);
 		});
 	});
 });
@@ -207,5 +207,20 @@ describe('The ClientList constructor', function () {
 		expect(list.get(client3.socket.id)).to.eq(null);
 		list1.add(client3);
 		expect(list.get(client3.socket.id)).to.eq(client3);
+	});
+
+	it('should be subclassable', function () {
+		function Sub() {
+			ClientList.call(this);
+		}
+		Sub.prototype = new ClientList();
+		Sub.prototype.constructor = Sub;
+
+		var sub = new Sub();
+		expect(sub).to.be.an.instanceof(Sub);
+
+		// chained inheritance
+		expect(sub.filter('Firefox')).to.be.an.instanceof(Sub);
+		expect(sub.pluck(1)).to.be.an.instanceof(Sub);
 	});
 });

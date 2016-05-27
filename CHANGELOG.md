@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0
+Improvements: deprecated `.len()` in favor of `.length`, allow ClientList to be subclassable, and lazily export the client code onto the `panic.client` property.
+
+Subclassing is curtesy of a new method, `.chain`, which ensures the `this` context's constructor is called instead of statically calling `new ClientList()`.
+
 ## v0.2.4
 Set the `constructor` property on the ClientList prototype.
 
