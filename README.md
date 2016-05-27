@@ -7,9 +7,9 @@
 [![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun)
 
 > **TL;DR:**<br />
-It's a glorified `eval()` with platform queries.
+A lightweight tool for browser and node.js choreography.
 
-Panic-server is designed as the underlying layer for panic-room, the distributed testing framework. It allows you to dynamically and reactively group connected clients and evaluate code on platform subsets.
+Panic-server is designed for distributed testing. It allows you to dynamically group clients and control them through Javascript, and is compatible with the test frameworks you already use. Think of it as Selenium WebDriver on steroids.
 
 For example:
 ```javascript
@@ -127,7 +127,10 @@ Once you have a server listening, point browsers/servers to your address ([here'
 > **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
 
 ### `panic.clients`
-Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
+Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have [RxJS](https://github.com/Reactive-Extensions/RxJS)-style methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
+
+### `panic.client`
+Returns the panic-client bundle code. This is useful for injection into a WebDriver instance (using `driver.executeScript`) without needing to do file system calls. The property is immutable and
 
 #### Events
 As the list changes, it will emit one of two mutation events:
@@ -188,11 +191,12 @@ var client = {
  - [`.excluding()`](#excluding)
  - [`.pluck()`](#pluck)
  - [`.run()`](#run)
- - [`.len()`](#len)
+ - [`.length`](#length)
  - [`.get()`](#get)
  - [`.add()`](#add)
  - [`.remove()`](#remove)
  - [`.each()`](#each)
+ - [`.chain()`](#chain)
 
 ##### <a name='filter'></a> `.filter(query)`
 Returns a filtered list containing everything that matches a platform query.
@@ -471,8 +475,8 @@ clients.run(function () {
 })
 ```
 
-##### <a name='len'></a> `.len()`
-Returns the number of clients in a list.
+##### <a name='length'></a> `.length`
+A getter property which returns the number of clients in a list.
 
 
 **Low-level API**
@@ -505,6 +509,24 @@ clients.each(function (client, id, list) {
 })
 ```
 
+##### <a name='chain'></a> `.chain([...lists])`
+This is an abstraction method that just calls `this.constructor` to create a new instance. Mainly used to allow subclassing, it makes sure the right class context is kept even when chaining off methods that create new lists, like `.filter` and `.pluck`.
+
+```javascript
+var list = new ClientList()
+list.chain() instanceof ClientList // true
+
+class SubClass extends ClientList {
+	coolNewMethod() { /* bacon */ }
+}
+
+var sub = new SubClass()
+sub.chain() instanceof SubClass // true
+sub.chain() instanceof ClientList // true
+sub.chain().coolNewMethod() // properly inherits
+```
+
+If you're making an extension that creates a new list instance, use this method to play nice with other extensions.
 
 ## Support
 If you have questions or ideas, we'd love to hear them! Just swing by our [gitter channel](https://gitter.im/amark/gun) and ask for @PsychoLlama or @amark. We're usually around :wink:

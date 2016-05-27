@@ -2,13 +2,13 @@
 var Emitter = require('events');
 var match = require('./matcher');
 var Promise = require('bluebird');
+var util = require('util');
+
 function ClientList(lists) {
 	var list = this;
 	Emitter.call(this);
 	list.clients = {};
-	function add(client) {
-		list.add(client);
-	}
+	var add = list.add.bind(list);
 	if (lists instanceof Array) {
 		lists.forEach(function (list) {
 			list.each(add).on('add', add);
@@ -17,8 +17,13 @@ function ClientList(lists) {
 }
 
 var API = ClientList.prototype = new Emitter();
+API.setMaxListeners(Infinity);
 
 API.constructor = ClientList;
+
+API.chain = function (list) {
+	return new this.constructor(list);
+};
 
 API.each = function (cb) {
 	var key;
@@ -57,7 +62,7 @@ API.get = function (ID) {
 };
 
 API.filter = function (query) {
-	var list = new ClientList();
+	var list = this.chain();
 	function filter(client, ID) {
 		if (query instanceof Function && query(client, ID)) {
 			list.add(client);
@@ -90,19 +95,12 @@ API.excluding = function (exclude) {
 	return list;
 };
 
-API.len = function () {
-	if (Object.keys instanceof Function) {
-		return Object.keys(this.clients).length;
-	}
-	var num = 0;
-	this.each(function () {
-		num += 1;
-	});
-	return num;
-};
+API.len = util.deprecate(function () {
+	return this.length;
+}, 'Use `.length` instead of `.len()`');
 
 API.run = function (cb, scope) {
-	var key, done = 0, list = this, length = this.len();
+	var key, done = 0, list = this, length = this.length;
 	key = Math.random()
 	.toString(36)
 	.slice(2);
@@ -131,7 +129,7 @@ API.run = function (cb, scope) {
 };
 
 API.pluck = function (num) {
-	var self, list = new ClientList();
+	var self, list = this.chain();
 	self = this;
 	function measure(client) {
 		if (!list.atCapacity) {
@@ -139,7 +137,7 @@ API.pluck = function (num) {
 		}
 	}
 	list.on('add', function () {
-		if (list.len() === num) {
+		if (list.length === num) {
 			list.atCapacity = true;
 		}
 	});
@@ -153,5 +151,18 @@ API.pluck = function (num) {
 };
 
 API.atCapacity = false;
+
+Object.defineProperty(API, 'length', {
+	get: function () {
+		if (Object.keys instanceof Function) {
+			return Object.keys(this.clients).length;
+		}
+		var num = 0;
+		this.each(function () {
+			num += 1;
+		});
+		return num;
+	}
+});
 
 module.exports = ClientList;
