@@ -1,7 +1,14 @@
 # Changelog
 
 ## v0.3.0
-Improvements: deprecated `.len()` in favor of `.length`, allow ClientList to be subclassable, and lazily export the client code onto the `panic.client` property.
+Breaking changes:
+ - position of the `done` changed to the first parameter. `this` context is no longer passed.
+ - `.len()` has been deprecated in favor of `.length`.
+ - `export vars` is no longer enabled by default, but opt-in using the `{ '@scope': true }` property.
+
+Improvements:
+ - allow ClientList to be subclassable
+ - lazily export the client code onto the new `panic.client` property
 
 Subclassing is curtesy of a new method, `.chain`, which ensures the `this` context's constructor is called instead of statically calling `new ClientList()`.
 
