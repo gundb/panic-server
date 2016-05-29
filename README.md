@@ -7,9 +7,9 @@
 [![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun)
 
 > **TL;DR:**<br />
-It's a glorified `eval()` with platform queries.
+A lightweight tool for browser and node.js choreography.
 
-Panic-server is designed as the underlying layer for panic-room, the distributed testing framework. It allows you to dynamically and reactively group connected clients and evaluate code on platform subsets.
+Panic-server is designed for distributed testing. It allows you to dynamically group clients and control them through Javascript, and is compatible with the test frameworks you already use. Think of it as Selenium WebDriver on steroids.
 
 For example:
 ```javascript
@@ -127,7 +127,10 @@ Once you have a server listening, point browsers/servers to your address ([here'
 > **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
 
 ### `panic.clients`
-Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have array-like methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
+Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have [RxJS](https://github.com/Reactive-Extensions/RxJS)-style methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
+
+### `panic.client`
+Returns the panic-client bundle code. This is useful for injection into a WebDriver instance (using `driver.executeScript`) without needing to do file system calls. The property is immutable and
 
 #### Events
 As the list changes, it will emit one of two mutation events:
@@ -188,11 +191,12 @@ var client = {
  - [`.excluding()`](#excluding)
  - [`.pluck()`](#pluck)
  - [`.run()`](#run)
- - [`.len()`](#len)
+ - [`.length`](#length)
  - [`.get()`](#get)
  - [`.add()`](#add)
  - [`.remove()`](#remove)
  - [`.each()`](#each)
+ - [`.chain()`](#chain)
 
 ##### <a name='filter'></a> `.filter(query)`
 Returns a filtered list containing everything that matches a platform query.
@@ -317,7 +321,7 @@ clients.filter('Node.js').run(function () {
 
 The function passed is first stringified, then sent to the clients for evaluation. When it's invoked on the client, it's given a special `this` context and some control parameters to work with async data.
 
-The function is passed two parameters: the `this` context, and the `done` callback. If the callback is set as a parameter, it's assumed that the code is asynchronous and won't report a `done` event until the callback is invoked or an error is thrown.
+The function is passed one parameter: a `done` callback. If takes a parameter, it's assumed that the code is asynchronous and won't report a `done` event until the callback is invoked or an error is thrown.
 
 After sending off your function, `.run` returns a promise. When every client has finished running the code, the promise fulfills. If you're not familiar with promises, I recommend reading the [MDN page](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). They're an invaluable tool and native support is well on it's way. They're also incredibly useful when paired with `.run`.
 
@@ -327,7 +331,7 @@ For example, you could have a list of 100 browsers, and perhaps you want each of
 var servers = clients.filter('Node.js')
 var browsers = clients.excluding(servers)
 
-function loadExpectJS(browser, done) {
+function loadExpectJS(done) {
 	// create a script element
 	var script = document.createElement('script')
 
@@ -411,21 +415,9 @@ However, that none of them are necessary to use panic-server.
 ##### `.run` scope controls
 This section is gonna be a little tricky, hold on...
 
-`.run` allows you to send local variables to the clients and continue using them as locals. If you're familiar with Javascript's [`with`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) statement, it's basically a fancy `with`.
+`.run` allows you to send local variables to the clients and continue using them as locals. If you're familiar with Javascript's [`with`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) statement, it's basically a fancy `with`, but don't worry, it's opt in. Let's show a simpler case first...
 
-By passing an object as the second parameter, you can export variables into the callback as local scope variables.
-
-```javascript
-clients.run(function () {
-	console.log(localVariable) // 'visible'
-	console.log(numbers) // array
-}, {
-	localVariable: 'visible',
-	numbers: [1, 2, 3, 5, 8]
-})
-```
-
-Alternatively, all variables are accessable in the `this.data` object:
+By passing an object as the second parameter, you'll be able to use them on the client by accessing `this.data`.
 
 ```javascript
 clients.run(function (client) {
@@ -440,10 +432,23 @@ clients.run(function (client) {
 })
 ```
 
+If you set `'@scope'` to `true` on your object, it'll export those variables into the local scope of your callback.
+
+```javascript
+clients.run(function () {
+	console.log(localVariable) // 'visible'
+	console.log(numbers) // array
+}, {
+	localVariable: 'visible',
+	numbers: [1, 2, 3, 5, 8],
+	'@scope': true
+})
+```
+
 In this way, you can share variables on the server with the clients without duplicating code. This is also useful for injecting variables into a mixin, like `loadScript`:
 
 ```javascript
-function loadScript(client, done) {
+function loadScript(done) {
 	var script = document.createElement('script');
 
 	// use the exported `src` variable
@@ -455,24 +460,24 @@ function loadScript(client, done) {
 
 // expose the `src` variable
 clients.run(loadScript, {
-	src: 'http://...'
+	src: 'http://...',
+	'@scope': true
 })
 ```
 
-Some Javascript linters may complain about using undefined variables, in which case you can either turn off the linter rule, or use `this.data` and disable the local variable injection by setting a flag in the scope object, called 'export vars'.
+Some Javascript linters may complain about using undefined variables, in which case you can either turn off the linter rule, or use `this.data`. If you're planning on maintaining the code long-term, I'd recommend using `this.data`.
 
 ```javascript
 clients.run(function () {
 	typeof src; // 'undefined'
 	this.data.src; // 'http://...'
 }, {
-	'export vars': false,
 	src: 'http://...'
 })
 ```
 
-##### <a name='len'></a> `.len()`
-Returns the number of clients in a list.
+##### <a name='length'></a> `.length`
+A getter property which returns the number of clients in a list.
 
 
 **Low-level API**
@@ -505,6 +510,36 @@ clients.each(function (client, id, list) {
 })
 ```
 
+##### <a name='chain'></a> `.chain([...lists])`
+This is an abstraction method that just calls `this.constructor` to create a new instance. Mainly used to allow subclassing, it makes sure the right class context is kept even when chaining off methods that create new lists, like `.filter` and `.pluck`.
+
+```javascript
+var list = new ClientList()
+list.chain() instanceof ClientList // true
+
+class SubClass extends ClientList {
+	coolNewMethod() { /* bacon */ }
+}
+
+var sub = new SubClass()
+sub.chain() instanceof SubClass // true
+sub.chain() instanceof ClientList // true
+sub.chain().coolNewMethod() // properly inherits
+```
+
+If you're making an extension that creates a new list instance, use this method to play nice with other extensions.
+
+## Roadmap
+The goal is to keep panic light-weight and modular. Future releases will likely be aimed at improving the plugin system and fixing any egregious bugs or compatibility issues. That said, there are some features we really want first...
+
+ - Allow clients to send back non-error data (through either the `done` callback or a continuous data stream) to enable ssh-style apps.
+
+ - Catch and report asynchronously thrown errors on...
+	 - **Node.js:** feasible by listening for UncaughtException on `global.process`.
+
+	 - **Browsers:** sounds easy in practice, but the browser is a place filled with pain and misery that makes that a really hard thing. Please tell me if you've got a better idea than `window.onerror` :pray:
+
+ - Implement an underlying `Client` interface that the ClientList builds on. The idea is to separate concerns and abstract the transport layer, UIDs, and job runners.
 
 ## Support
 If you have questions or ideas, we'd love to hear them! Just swing by our [gitter channel](https://gitter.im/amark/gun) and ask for @PsychoLlama or @amark. We're usually around :wink:
