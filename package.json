@@ -4,7 +4,8 @@
   "description": "Distributed Javascript runner",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha"
+    "lint": "eslint src/**",
+    "test": "mocha && npm run lint"
   },
   "repository": {
     "type": "git",
