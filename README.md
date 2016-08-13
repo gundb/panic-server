@@ -1,5 +1,4 @@
-# Panic-server
-*Distributed Javascript runner*
+<img alt='PANIC' width='500px' src='./panic-logo.jpg'></img>
 
 [![Travis branch](https://img.shields.io/travis/PsychoLlama/panic-server/master.svg?style=flat-square)](https://travis-ci.org/PsychoLlama/panic-server)
 [![npm](https://img.shields.io/npm/dt/panic-server.svg?style=flat-square)](https://www.npmjs.com/package/panic-server)
@@ -7,9 +6,9 @@
 [![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun)
 
 > **TL;DR:**<br />
-A lightweight tool for browser and node.js choreography.
+A lightweight tool for choreographing browser and Node.js catastrophes.
 
-Panic-server is designed for distributed testing. It allows you to dynamically group clients and control them through Javascript, and is compatible with the test frameworks you already use. Think of it as Selenium WebDriver on steroids.
+Panic is designed to test the fault-tolerance of distributed systems. It allows you to dynamically group clients and concurrently control them with Javascript, and is compatible with the test frameworks you already use. Think of it as Selenium WebDriver on steroids.
 
 For example:
 ```javascript
