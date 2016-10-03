@@ -3,6 +3,7 @@
 var mock = require('./mock');
 var Client = mock.Client;
 var ClientList = require('../src/ClientList');
+var Promise = require('bluebird');
 
 var expect = require('chai').expect;
 
@@ -178,6 +179,55 @@ describe('A clientList', function () {
 			expect(alice.length).to.eq(1);
 			expect(bob.length).to.eq(1);
 		});
+	});
+
+	describe('minimum qualifier', function () {
+
+		it('should resolve when the minimum is reached', function () {
+			var promise = list.atLeast(1);
+			var called = false;
+			promise.then(function () {
+				called = true;
+			});
+			expect(called).to.eq(false);
+			list.add(new Client());
+
+			// Mocha will wait for this to resolve.
+			return promise;
+		});
+
+		it('should resolve if the min is already reached', function () {
+			var promise = list.atLeast(0);
+
+			// This will time out if unresolved.
+			return promise;
+		});
+
+		it('should resolve to undefined', function () {
+			function validate (arg) {
+				expect(arg).to.eq(undefined);
+			}
+			var immediate = list.atLeast(0).then(validate);
+			var later = list.atLeast(1).then(validate);
+
+			list.add(new Client());
+
+			return Promise.all([immediate, later]);
+		});
+
+		it('should resolve if it has more than enough', function () {
+			list.add(new Client()).add(new Client());
+
+			return list.atLeast(1);
+		});
+
+		it('should unsubscribe after resolving', function () {
+			list.atLeast(1);
+			expect(list.listenerCount('add')).to.eq(1);
+			list.add(new Client());
+			expect(list.listenerCount('add')).to.eq(0);
+		});
+
 	});
 });
 

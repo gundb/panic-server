@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1
+### Added
+- Method `.atLeast`, useful for pausing until a minimum number of clients join.
+
 ## v0.3.0
 Breaking changes:
  - position of the `done` changed to the first parameter. `this` context is no longer passed.

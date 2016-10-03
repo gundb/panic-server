@@ -128,6 +128,23 @@ API.run = function (cb, scope) {
 	});
 };
 
+API.atLeast = function (min) {
+	var list = this;
+
+	if (list.length >= min) {
+		return Promise.resolve();
+	}
+
+	return new Promise(function (resolve) {
+		list.on('add', function cb () {
+			if (list.length >= min) {
+				list.removeListener('add', cb);
+				resolve();
+			}
+		});
+	});
+};
+
 API.pluck = function (num) {
 	var self, list = this.chain();
 	self = this;

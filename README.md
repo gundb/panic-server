@@ -176,6 +176,7 @@ If no array is given, an empty list is returned.
 
 <a name='clients'></a>
 > Every client inside a list is an object with two properties, `platform` and `socket`. The platform (via [platform.js](https://github.com/bestiejs/platform.js/)) is sent as part of the client handshake, while the socket is a websocket interface provided by [`socket.io`](http://socket.io/).
+
 ```javascript
 // each client has this structure
 var client = {
@@ -189,6 +190,7 @@ var client = {
  - [`.filter()`](#filter)
  - [`.excluding()`](#excluding)
  - [`.pluck()`](#pluck)
+ - [`.atLeast`](#at-least)
  - [`.run()`](#run)
  - [`.length`](#length)
  - [`.get()`](#get)
@@ -298,7 +300,33 @@ var carl = clients
 
 > `.pluck` is highly reactive, and will readjust itself to hold as many clients as possible.
 
-> **Warning:** the method name may change.
+##### <a name='at-least'></a> `.atLeast(Number)`
+Oftentimes, you need a certain number of clients before running any tests. `.atLeast` takes that minimum number, and returns a promise.
+
+That promise resolves when the minimum has been reached.
+
+Here's an example:
+```js
+var clients = panic.clients
+
+// Waits for 2 clients before resolving.
+var minimum = clients.atLeast(2)
+
+minimum.then(function () {
+
+	// 2 clients are connected now.
+	return clients.run(/* ... */)
+})
+```
+
+It can also be used on derived lists, like so:
+
+```js
+var node = clients.filter('Node.js')
+node.atLeast(3).then(/* ... */)
+```
+
+> **Pro tip:** `.atLeast` goes great with mocha's `before` function.
 
 ##### <a name='run'></a> `.run(Function[, Object])`
 `.run` is where the magic happens. This method allows you to evaluate a function on all platforms belonging to this list, and reject or resolve a promise when either everyone finishes or one fails. Asynchronous code is supported.
