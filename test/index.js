@@ -9,6 +9,7 @@ var expect = require('chai').expect;
 
 describe('A clientList', function () {
 	var list, client;
+
 	beforeEach(function () {
 		list = new ClientList();
 		client = new Client({
@@ -54,9 +55,10 @@ describe('A clientList', function () {
 		expect(list.length).to.eq(0);
 	});
 
-	it('should resolve a promise when all clients finish', function (done) {
-		client.socket.on('run', function (cb, jobID) {
-			client.socket.emit(jobID);
+	it('should resolve when all clients finish', function (done) {
+		var socket = client.socket;
+		socket.on('run', function (cb, jobID) {
+			socket.emit(jobID);
 		});
 		list.add(client).run(function () {})
 		.then(function () {

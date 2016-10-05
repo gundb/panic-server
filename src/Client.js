@@ -41,13 +41,13 @@ Client.prototype = {
 
 		var socket = this.socket;
 
-		socket.emit('run', source, jobID, props);
-
 		/** Report the success or failure of the job. */
-		return new Promise(function (resolve, reject) {
+		var promise = new Promise(function (resolve, reject) {
 			socket.once('disconnect', resolve);
 
 			socket.once(jobID, function (error) {
+				socket.removeListener('disconnect', resolve);
+
 				if (error) {
 					reject(error);
 				} else {
@@ -55,6 +55,10 @@ Client.prototype = {
 				}
 			});
 		});
+
+		socket.emit('run', source, jobID, props);
+
+		return promise;
 	},
 };
 

@@ -1,15 +1,21 @@
 'use strict';
 var Emitter = require('events');
+var Client = require('../src/Client');
 
-function Client(platform) {
-	this.socket = new Emitter();
-	this.socket.connected = true;
-	this.socket.id = Math.random()
-	.toString(36)
-	.slice(2);
-	this.platform = platform || {};
+function mock (platform) {
+	var rand = Math.random();
+
+	// Fake a socket.io socket.
+	var socket = new Emitter();
+	socket.connected = true;
+	socket.id = rand.toString(36).slice(2);
+
+	return new Client({
+		socket: socket,
+		platform: platform || {},
+	});
 }
 
 module.exports = {
-	Client: Client
+	Client: mock,
 };

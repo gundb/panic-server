@@ -7,6 +7,7 @@ var clients = require('./clients');
 var file = require.resolve('panic-client/panic.js');
 var Server = require('http').Server;
 var panic = require('./index');
+var Client = require('./Client');
 var client;
 
 /**
@@ -45,11 +46,14 @@ function serve(req, res) {
 function upgrade(socket) {
 	socket.on('handshake', function (platform) {
 
-		/** Add the client to the panic.clients list. */
-		clients.add({
+		/** Create a new panic client. */
+		var client = new Client({
 			socket: socket,
-			platform: platform
+			platform: platform,
 		});
+
+		/** Add the new client. */
+		clients.add(client);
 
 	});
 }

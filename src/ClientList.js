@@ -196,38 +196,22 @@ API.excluding = function (exclude) {
 
 /**
  * Run a function remotely on a group of clients.
- * @param  {Function} cb - The function eval on clients.
- * @param  {Object} [scope] - Any variables the job needs.
+ * @param  {Function} job - The function eval on clients.
+ * @param  {Object} [props] - Any variables the job needs.
  * @return {Promise} - Resolves when the jobs finish,
  * rejects if any of them fail.
  */
-API.run = function (cb, scope) {
-	var key, done = 0, list = this, length = this.length;
-	key = Math.random()
-	.toString(36)
-	.slice(2);
+API.run = function (job, props) {
+	var jobs = [];
 
-	return new Promise(function (resolve, reject) {
-		function count(err) {
-			if (err) {
-				reject(err);
-			} else if ((done += 1) >= length) {
-				resolve(list);
-			}
-		}
-		function add() {
-			count(null);
-		}
-		list.each(function (client) {
-			client.socket
-			.on(key, function (err) {
-				count(err);
-				client.socket.removeListener('disconnect', add);
-			})
-			.once('disconnect', add)
-			.emit('run', String(cb), key, scope);
-		});
+	/** Run the job on each client. */
+	this.each(function (client) {
+		var promise = client.run(job, props);
+		jobs.push(promise);
 	});
+
+	/** Wait for all jobs to finish. */
+	return Promise.all(jobs);
 };
 
 /**
