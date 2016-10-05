@@ -566,8 +566,6 @@ The goal is to keep panic light-weight and modular. Future releases will likely 
 
 	 - **Browsers:** sounds easy in practice, but the browser is a place filled with pain and misery that makes that a really hard thing. Please tell me if you've got a better idea than `window.onerror` :pray:
 
- - Implement an underlying `Client` interface that the ClientList builds on. The idea is to separate concerns and abstract the transport layer, UIDs, and job runners.
-
 ## Support
 If you have questions or ideas, we'd love to hear them! Just swing by our [gitter channel](https://gitter.im/amark/gun) and ask for @PsychoLlama or @amark. We're usually around :wink:
 

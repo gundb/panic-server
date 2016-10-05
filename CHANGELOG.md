@@ -4,6 +4,9 @@
 ### Removed
 - `.len()` has been permanently removed (was previously under deprecation notice).
 
+### Added
+- Each client object held within a `ClientList` is capable of dispatching it's own jobs, independently of a list.
+
 ## v0.4.1
 ### Added
 - Method `.atLeast`, useful for pausing until a minimum number of clients join.
