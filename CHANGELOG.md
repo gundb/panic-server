@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Removed
+- `.len()` has been permanently removed (was previously under deprecation notice).
+
 ## v0.4.1
 ### Added
 - Method `.atLeast`, useful for pausing until a minimum number of clients join.

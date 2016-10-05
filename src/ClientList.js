@@ -2,7 +2,6 @@
 var Emitter = require('events');
 var match = require('./matcher');
 var Promise = require('bluebird');
-var util = require('util');
 
 /**
  * Creates reactive lists of clients.
@@ -194,15 +193,6 @@ API.excluding = function (exclude) {
 
 	return list;
 };
-
-/**
- * Get the number of clients in the list.
- * @deprecated
- * @returns {Number} - The number of clients.
- */
-API.len = util.deprecate(function () {
-	return this.length;
-}, 'Use `.length` instead of `.len()`');
 
 /**
  * Run a function remotely on a group of clients.
