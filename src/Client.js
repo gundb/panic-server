@@ -5,12 +5,22 @@ var Promise = require('bluebird');
 /**
  * A wrapper around a websocket, providing
  * methods for interacting with clients.
+ * @throws {Error} - The socket and platform must be valid.
  * @param {Object} client - A panic-client handshake.
  * @param {Socket} client.socket - The socket.io connection.
  * @param {Object} client.platform - The client platform.js object.
  * @class Client
  */
 function Client (client) {
+
+	/** Basic input validation. */
+	if (!client.socket) {
+		throw new Error('Invalid "client.socket" property.');
+	}
+	if (!client.platform) {
+		throw new Error('Invalid "client.platform" property.');
+	}
+
 	this.socket = client.socket;
 	this.platform = client.platform;
 }

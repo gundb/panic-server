@@ -30,6 +30,26 @@ describe('A client', function () {
 		expect(client.platform).toBe(platform);
 	});
 
+	it('should validate the socket', function () {
+		function fail () {
+			return new Client({
+				// Missing "socket".
+				platform: platform,
+			});
+		}
+		expect(fail).toThrow();
+	});
+
+	it('should validate the platform', function () {
+		function fail () {
+			return new Client({
+				socket: new Emitter(),
+				// Missing "platform".
+			});
+		}
+		expect(fail).toThrow();
+	});
+
 	describe('"run" call', function () {
 		var spy;
 
