@@ -1,190 +1,263 @@
-<img alt='PANIC' width='500px' src='./panic-logo.jpg'></img>
+<!-- <img alt='PANIC' width='500px' src='./panic-logo.jpg'></img>
 
 [![Travis branch](https://img.shields.io/travis/PsychoLlama/panic-server/master.svg?style=flat-square)](https://travis-ci.org/PsychoLlama/panic-server)
 [![npm](https://img.shields.io/npm/dt/panic-server.svg?style=flat-square)](https://www.npmjs.com/package/panic-server)
 [![npm](https://img.shields.io/npm/v/panic-server.svg?style=flat-square)](https://www.npmjs.com/package/panic-server)
-[![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun)
+[![Gitter](https://img.shields.io/gitter/room/amark/gun.svg?style=flat-square)](https://gitter.im/amark/gun) -->
 
 > **TL;DR:**<br />
-A lightweight tool for choreographing browser and Node.js catastrophes.
+A remote control for browsers and servers.
 
-Panic is designed to test the fault-tolerance of distributed systems. It allows you to dynamically group clients and concurrently control them with Javascript, and is compatible with the test frameworks you already use. Think of it as Selenium WebDriver on steroids.
+Panic is an end-to-end testing framework, designed specifically for distributed systems and collaborative apps.
 
-For example:
-```javascript
-// import the runner
-var panic = require('panic-server')
+## Why
+At [gunDB](http://gun.js.org/), we're building a real-time, distributed JS database.
 
-// Start the server.
-// This is what you'll connect
-// to from a client.
-panic.server().listen(3000)
+We needed a testing tool that could simulate complex scenarios, and programmatically report success or failure. For instance, how would you write this test?
 
-// The list of all connected clients,
-// updating in real-time.
-var clients = panic.clients
+1. Start a server.
+2. Spin up two browsers, each syncing with the server.
+3. Save data on just one browser.
+4. Assert that it replicated to the other.
 
-clients.run(function () {
-	console.log('This code runs on every client');
-}).then(function () {
-	// this runs when all clients have finished.
-}).catch(function () {
-	// this runs if a client throws an error.
-})
-```
+And that's just browser to browser replication. What about simulating app failures?
 
-The `.run` command sends a function to be evaluated on every connected client at that point in time. To add a client, you'll need to import the code and point it to the server.
+1. Start a server.
+2. Start two browsers, each synced with the server.
+3. Save some initial data.
+4. Kill the server, and erase all it's data.
+5. Make conflicting edits on the browsers.
+6. Start the server again.
+7. Assert both conflicting browsers converge on a value.
 
-<a name='how-to-connect'></a>
-**Browser**
-```html
-<!--
-The port number and hostname are
-configured using `panic.server()`
--->
-<script src="http://localhost:3000/panic.js"></script>
-<!--
-As soon as it finishes loading,
-`panic` will be a global variable.
--->
-<script>
-	// this attempts to connect to your panic server
-	panic.server('http://localhost:3000')
-</script>
-```
+That's why we built panic.
 
-**Server**
+## How it works
+Well, there are two repos: `panic-server`, and [`panic-client`](https://github.com/gundb/panic-client/).
 
-The [`panic-client`](https://github.com/gundb/panic-client) code can be downloaded through [npm](https://www.npmjs.com/package/panic-client). To install it, run this in your terminal:
+You'll start a panic server (sometimes called a coordinator), then you'll connect to it from panic clients.
 
-```bash
-npm install panic-client
-```
+Loading the client software into a browser or Node.js process exposes the mother of all XSS vulnerabilities. Connect it to the coordinator, then it'll have full control over your process.
 
-Now you can use it in Node.js:
+That's where panic gets its power. It remotely controls every client and server in your app.
 
-```javascript
-// imports the client code
-var panic = require('panic-client')
+Now obviously, due to those vulnerabilities, you wouldn't want panic in user-facing code. Hang on, lemme make this bigger...
 
-// connects to your panic server
-panic.server('http://localhost:3000')
-```
+### DO NOT USE PANIC IN USER-FACING CODE.
 
-Now that the clients are connected, you can run any code you want on them from the panic-server. Obviously you won't want to do this when, no, hang on, lemme make this bigger...
+Well, unless running `eval` on arbitrary code is an app feature.
 
-> **WARNING:** `eval()` is used. Including this library in user-facing code may open serious [XSS vulnerabilities](https://en.wikipedia.org/wiki/Cross-site_scripting). This library is targeted towards testing frameworks, and should not be used in production code unless you really really know what you're doing.
-
-Think of it as a control center for your code. You can pick out a group of clients, and run arbitrary code on them. Now that all that is out of the way, let's get to the API...
+Cool, so we've covered the "why" and the "how it works". Now onto the API!
 
 ## API
-Panic-server consists of two parts:
- - the server
- - the clients
+> If you're massively bored by documentation and just wanna copy/paste working code, well, [happy birthday](#scaffolding).
 
- Most of what panic's functionality comes from it's client interface, leaving the server as the simpler of the two. We'll start there.
+### Clients
+A client is an instance of `panic.Client`, and represents another computer or process connected through websockets.
 
-### `panic.server([http.Server])`
-If an [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server) is passed, panic will use it to configure [socket.io](http://socket.io/) and the `/panic.js` route will be added that servers up the [`panic-client`](https://github.com/gundb/panic-client) browser code.
+#### Properties
+Every client has some properties you can use, although you probably won't need to.
 
-If no server is passed, a new one will be created.
+##### `.socket`
+References the [`socket.io`](http://socket.io/) interface connecting you to the other process. Unless you're developing a plugin, you'll probably never need to use this.
 
-If you're not familiar with Node.js' http module, that's okay. The quickest way to get up and running is to call `.listen(8080)` which listens for requests on port 8080. In a browser, the url will look something like this: `http://localhost:8080/panic.js`.
-
-**Create a new server**
-```javascript
-var panic = require('panic-server')
-
-// create a new http server instance
-var server = panic.server()
-
-// listen for requests on port 8080
-server.listen(8080)
-```
-
-**Reuse an existing one**
-```javascript
-var panic = require('panic-server')
-
-// create a new http server
-var server = require('http').createServer()
-
-server.on('request', doThings)
-server.on('request', doOtherThings)
-
-// pass it to panic
-panic.server(server)
-
-// start listening on a port
-server.listen(8080)
-```
-
-> If you want to listen on port 80 (the default for browsers), you may need to run node as `sudo`.
-
-Once you have a server listening, point browsers/servers to your address ([here's how](#how-to-connect)).
-
-> **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
-
-### `panic.clients`
-Every group is a ClientList instance, and inherits from EventEmitter. They update in real-time as clients are added and disconnected, and have [RxJS](https://github.com/Reactive-Extensions/RxJS)-style methods for manipulating and filtering. `panic.clients` is the root level list, and contains every client currently connected.
-
-### `panic.client`
-Returns the panic-client bundle code. This is useful for injection into a WebDriver instance (using `driver.executeScript`) without needing to do file system calls. The property is immutable and
-
-#### Events
-As the list changes, it will emit one of two mutation events:
- - `add`: a new client is added to the list
- - `remove`: a client is removed from the list
-
-Both events pass the client and it's id.
-
-**Examples**
-```javascript
-// listen for new clients
-panic.clients.on('add', function (client, id) {
-	// a new client is added
-})
-
-// listen for removed clients
-panic.clients.on('remove', function (client, id) {
-	// a client has been removed
-})
-```
-
-#### ClientList
-The list constructor is exposed as `panic.ClientList`, and is useful when composing large groups from smaller ones. For example, you might have a list of both Internet Explorer and Opera Mini clients that you want to join into a new list. To create a group containing both, you'd either write a complex filter, or you can make a new list that simply combines them. Here's what that looks like:
-
-```javascript
-// Grab the List constructor
-var List = panic.ClientList;
-
-var clients = panic.clients;
-
-// Get the list of IE browsers
-var IE = clients.filter('Internet Explorer');
-
-// Get the list of Opera browsers
-var opera = clients.filter('Opera Mini');
-
-// create a new list that represents both
-var pickyBrowsers = new List([ IE, opera ]);
-```
-
-If no array is given, an empty list is returned.
+##### `.platform`
+This references the [`platform.js`](https://github.com/bestiejs/platform.js/) object. It's sent as part of the handshake by [`panic-client`](https://github.com/gundb/panic-client/).
 
 #### Methods
+Right now there's only one, but it's where the whole party's at!
 
-<a name='clients'></a>
-> Every client inside a list is an object with two properties, `platform` and `socket`. The platform (via [platform.js](https://github.com/bestiejs/platform.js/)) is sent as part of the client handshake, while the socket is a websocket interface provided by [`socket.io`](http://socket.io/).
+##### `.run()`
+Sends code to execute on the client.
 
-```javascript
-// each client has this structure
-var client = {
-	// the websocket is a socket.io interface
-	socket: WebSocket,
-	platform: { /* platform.js */ }
-}
+It takes two parameters:
+
+1. The function to execute remotely.
+2. Optionally, some variables to send with it.
+
+This is by far the weirdest part of panic. Your function is run, but not in the same context, not even in the same process, maybe a different JS environment and OS entirely.
+
+It's stringified, sent to the client, then evaluated in a special job context.
+
+```js
+console.log('This runs in your process.')
+
+client.run(function () {
+	console.log("This doesn't.")
+})
 ```
+
+Some of the common confusion points:
+
+- You can't use any variables outside your function.
+- That includes other functions.
+- If the client is a browser, obviously you won't have `require` available.
+- The client might have different packages or package versions installed.
+
+Bottom line, your code is run on the client, not where you wrote it.
+
+Inside the function, you've got access to the whole [`panic-client` API](https://github.com/gundb/panic-client/#api).
+
+Because your function can't see any local scope variables, anything the function depends on needs to be sent with it. That's our second parameter, `props`.
+
+**Example**
+```js
+var clientPort = 8085
+
+client.run(function () {
+	var http = require('http')
+	var server = new http.Server()
+
+	// The variable you sent.
+	var port = this.props.port
+
+	server.listen(port)
+}, {
+
+	// Sends the local variable
+	// as `props.port`.
+	port: clientPort
+})
+```
+
+Careful though, any props you send have to be JSON compatible. It'll crash if you try to send a circular reference.
+
+###### Return values
+So, we've showed how values can be sent to the client, but what about getting values back?
+
+Prepare yourself, this is pretty awesome.
+
+`.run` returns a promise. Any return value from the client will be the resolve value. For instance:
+
+```js
+client.run(function () {
+	var ip = require('ip')
+	return ip.address()
+}).then(function (ip) {
+
+	// The address of the other machine
+	console.log(ip)
+})
+```
+
+> For more details on return values and edge cases, read the panic client [API](https://github.com/gundb/panic-client/#api).
+
+So, if one of your clients is a node process...
+
+```js
+function sh () {
+	var child = require('child_process')
+	var spawn = child.spawnSync
+
+	var cmd = this.props.cmd
+	var args = this.props.args
+
+	var result = spawn(cmd, args || [])
+
+	return result.stdout
+}
+
+client.run(sh, {
+	cmd: 'ls',
+	args: ['-lah']
+}).then(function (dir) {
+	var output = dir.toString('utf8')
+	console.log(output)
+})
+```
+
+Tada, now you have SSH over node.
+
+> If you're into node stuff, you probably noticed `result.stdout` is a Buffer. That's allowed, since socket.io has first-class support for binary streams. Magical.
+
+###### Errors
+What's a test suite without error reporting? I dunno. I've never seen one.
+
+If your job throws an error, you'll get the message back on the server:
+
+```js
+client.run(function () {
+	throw new Error(
+		'Hrmm, servers are on fire.'
+	)
+}).catch(function (error) {
+	console.log(error)
+	/*
+	{
+		message: 'Hrmm, servers...',
+		source: `function () {
+			throw new Error(
+				'Hrmm, servers are on fire.'
+			)
+		}`,
+		platform: {} // platform.js
+	}
+	*/
+})
+```
+
+As you can see, some extra debugging information is attached to each error.
+
+- `.message`: the error message thrown.
+- `.source`: the job that failed.
+- `.platform`: the platform it failed on, courtesy of platform.js.
+
+However, due to complexity, stack traces aren't included. `eval` and socket.io make it hard to parse. Maybe in the future.
+
+### Lists of clients
+Often, you're working with groups of clients. Like, only run this code on IE, or only on Node.js processes.
+
+That's where dynamic lists come in. Declaratively, you describe what the list should contain, and panic keeps them up to date.
+
+#### `panic.clients`
+This is the top-level reactive list, containing every client currently connected. As new clients join, they're added to this list. When disconnected, they're removed.
+
+
+##### Events
+Every list of clients will emit these events.
+
+###### `"add"`
+Fires when a new client is added to the list.
+
+It'll pass both the `Client` and the socket ID.
+
+```js
+clients.on('add', function (client, id) {
+	console.log('New client:', id)
+})
+```
+
+###### `"remove"`
+Basically the same as `"add"`, just backwards.
+
+```js
+clients.on('remove', function (client, id) {
+	console.log('Client', id, 'left.')
+})
+```
+
+#### `panic.ClientList`
+Every list is an instance of `ClientList`. You can manually create a new lists, but generally you won't need to.
+
+It's most useful for creating a new reactive list as the union of others. For example:
+
+```js
+var explorer = clients.filter('Internet Explorer')
+var opera = clients.filter('Opera Mini')
+
+var despicable = new ClientList([
+	explorer,
+	opera,
+])
+```
+
+In the example above, any new clients added to either `explorer` or `opera` will make it into the `despicable` list.
+
+All clients are deduplicated automatically.
+
+If you don't pass an array, you're left with a sad, empty client list.
+
+#### `ClientList` API
 
 **Table of Contents**
  - [`.filter()`](#filter)
@@ -200,9 +273,7 @@ var client = {
  - [`.chain()`](#chain)
 
 ##### <a name='filter'></a> `.filter(query)`
-Returns a filtered list containing everything that matches a platform query.
-
-> Platform data is generated by [platform.js](https://github.com/bestiejs/platform.js/).
+Creates a new list of clients matching a query.
 
 When passed a `String` or `RegExp`, it'll be used to match against the `platform.name`. For example, `clients.filter('Firefox')` will return a dynamic list of all firefox clients, as will `clients.filter(/Firefox/)`. A more complex query can be formed by passing an object containing more platform descriptors.
 
@@ -211,14 +282,12 @@ var list = clients.filter({
 	layout: /(Gecko|Blink)/,
 	os: {
 		architecture: 64,
-		family: 'OS X'
-	}
+		family: /(OS X|Windows)/,
+	},
 })
 ```
 
-Every setting above is optional, and you can create as loose or specific a query as you need. If you need a more complex query than that, you can also pass a filtering callback, which functions much like [`Array.prototype.filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter).
-
-> [client definition](#clients)
+Every setting above is optional, and you can create as loose or specific a query as you need. If you need a more complex query than that, you can also pass a filtering callback, which works much like [`Array.prototype.filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter).
 
 ```javascript
 var firefox = clients.filter(function (client, id, list) {
@@ -231,7 +300,7 @@ var firefox = clients.filter(function (client, id, list) {
 		This query only adds versions of
 		Firefox later than version 36.
 	*/
-	if (platform.name === 'Firefox' && platform.version > 36) {
+	if (platform.name === 'Firefox' && platform.version > '36') {
 		// add this client to the new list
 		return true;
 	} else {
@@ -249,7 +318,7 @@ var firefox = clients.filter('Firefox')
 
 // the list of firefox newer after version 36
 var firefoxAfter36 = firefox.filter(function (client) {
-	return client.platform.version > 36
+	return client.platform.version > '36'
 });
 ```
 
@@ -328,217 +397,48 @@ node.atLeast(3).then(/* ... */)
 
 > **Pro tip:** `.atLeast` goes great with mocha's `before` function.
 
-##### <a name='run'></a> `.run(Function[, Object])`
-`.run` is where the magic happens. This method allows you to evaluate a function on all platforms belonging to this list, and reject or resolve a promise when either everyone finishes or one fails. Asynchronous code is supported.
+##### <a name='run'></a> `.run(Function)`
+It just calls the `client.run` function for every item in the list, wrapping them in `Promise.all`.
 
-`.run` takes one argument: the function to evaluate. It can be weird to think about, and may trip you up a couple times. **The function will not be run on panic-server. It is run on the client**, it does not have your local scope, and may not have your platform tools (like CommonJS, window variables, npm modules, ES2015 compatibility, etc). You are potentially evaluating on an entirely different machine. Code responsibly :wink:
+When every client reports success, it resolves to a list of return values.
 
-That said, here's an example:
+However, if any client fails, the promise rejects.
 
-```javascript
-clients.run(function () {
-	// this code is evaluated on every platform
-})
-
-clients.filter('Node.js').run(function () {
-	var http = require('http')
-	// evaluating live on every server
-});
-```
-
-The function passed is first stringified, then sent to the clients for evaluation. When it's invoked on the client, it's given a special `this` context and some control parameters to work with async data.
-
-The function is passed one parameter: a `done` callback. If takes a parameter, it's assumed that the code is asynchronous and won't report a `done` event until the callback is invoked or an error is thrown.
-
-After sending off your function, `.run` returns a promise. When every client has finished running the code, the promise fulfills. If you're not familiar with promises, I recommend reading the [MDN page](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). They're an invaluable tool and native support is well on it's way. They're also incredibly useful when paired with `.run`.
-
-For example, you could have a list of 100 browsers, and perhaps you want each of them to load a script before running any other code. First, you'd send the code to load the script, call `done` when you're finished. Once all the browsers report `done`, the promise resolves and you can run more code. Here's what that looks like:
-
-```javascript
-var servers = clients.filter('Node.js')
-var browsers = clients.excluding(servers)
-
-function loadExpectJS(done) {
-	// create a script element
-	var script = document.createElement('script')
-
-	// set the source to expect.js
-	script.src = 'https://cdn.rawgit.com/Automattic/expect.js/master/index.js'
-
-	script.onload = done;
-	script.onerror = this.fail;
-}
-
-browsers.run(loadExpectJS)
-.then(function () {
-	// all browsers successfully loaded expect.js
-})
-.catch(function (error) {
-	// one or more browsers failed to load expect.js
-})
-```
-
-> **Fun fact:** by returning a new promise in a `.then` callback, everything chained after refers to that new promise. This means you can create really cool chains, like "load expect.js, then run a function, then refresh all browsers", all executed synchronously. Here's an example:
-
-```javascript
-// using the function defined above,
-// load expect.js
-browsers.run(loadExpectJS)
-.then(function () {
-	// once they've all loaded the file...
-	return browsers.run(function () {
-		// run this assertion code
-		expect(true).to.eq(true)
-	})
-})
-.then(function () {
-	// once everyone's ran the assertion code,
-	return browsers.run(function () {
-		// refresh every browser.
-		location.reload()
-	})
-})
-```
-
-###### async/await
-If you're using Babel.js, promises become much more succinct using the ES7/2016 async/await controls, or alternatively [`asyncawait`](https://www.npmjs.com/package/asyncawait) on npm, or the [`co`](https://github.com/tj/co) module. I recommend checking them out, as it greatly improves the code readability.
-
-**Babel.js/ES2016**
-```javascript
-// define an async function
-async function runCodeStuff () {
-	// pause for all browsers to finish 1st chunk
-	await browsers.run(function () {
-		// 1st code chunk
-	})
-
-	// pause for 2nd chunk
-	await browsers.run(function () {
-		// 1st chunk finished,
-		// 2nd code chunk running
-	})
-
-	console.log('Both chunks finished!')
-}
-```
-
-**co js**
-```javascript
-co(function * () {
-	yield browsers.run(function () {
-		// first code chunk
-	})
-
-	yield browsers.run(function () {
-		// second code chunk
-	})
-
-	console.log('Both code chunks finished!')
-})
-```
-
-However, that none of them are necessary to use panic-server.
-
-##### `.run` scope controls
-This section is gonna be a little tricky, hold on...
-
-`.run` allows you to send local variables to the clients and continue using them as locals. If you're familiar with Javascript's [`with`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) statement, it's basically a fancy `with`, but don't worry, it's opt in. Let's show a simpler case first...
-
-By passing an object as the second parameter, you'll be able to use them on the client by accessing `this.data`.
-
-```javascript
-clients.run(function (client) {
-	// using `this.data`
-	console.log(this.data.localVariable) // 'visible'
-
-	// the `client` param is the same as `this`
-	console.log(client.data.numbers) // array
-}, {
-	localVariable: 'visible',
-	numbers: [1, 2, 3, 5, 8]
-})
-```
-
-If you set `'@scope'` to `true` on your object, it'll export those variables into the local scope of your callback.
-
-```javascript
-clients.run(function () {
-	console.log(localVariable) // 'visible'
-	console.log(numbers) // array
-}, {
-	localVariable: 'visible',
-	numbers: [1, 2, 3, 5, 8],
-	'@scope': true
-})
-```
-
-In this way, you can share variables on the server with the clients without duplicating code. This is also useful for injecting variables into a mixin, like `loadScript`:
-
-```javascript
-function loadScript(done) {
-	var script = document.createElement('script');
-
-	// use the exported `src` variable
-	script.src = src;
-
-	script.onload = done;
-	document.body.appendChild(script);
-}
-
-// expose the `src` variable
-clients.run(loadScript, {
-	src: 'http://...',
-	'@scope': true
-})
-```
-
-Some Javascript linters may complain about using undefined variables, in which case you can either turn off the linter rule, or use `this.data`. If you're planning on maintaining the code long-term, I'd recommend using `this.data`.
-
-```javascript
-clients.run(function () {
-	typeof src; // 'undefined'
-	this.data.src; // 'http://...'
-}, {
-	src: 'http://...'
+```js
+panic.clients.run(function () {
+	var ip = require('ip')
+	return ip.address()
+}).then(function (ips) {
+	console.log(ips) // Array of IPs.
 })
 ```
 
 ##### <a name='length'></a> `.length`
 A getter property which returns the number of clients in a list.
 
-
-**Low-level API**
------------------
-
 ##### <a name='get'></a> `.get(id)`
 Returns the client corresponding to the id. Presently, socket.io's `socket.id` is used to uniquely key clients.
 
 ##### <a name='add'></a> `.add(client)`
-Manually adds a client to the list. This is low-level enough that you should never need it. Clients have two properties, the platform and their socket, and are further explained [here](#clients).
+Manually adds a client to the list, triggering the `"add"` event, but only if the client wasn't there before.
 
 ##### <a name='remove'></a> `.remove(client)`
-Removes a client from the list, emitting a `remove` event with the client object. This API is low-level enough that you shouldn't need to use it.
+Removes a client from the list, emitting a `remove` event. Again, if the client wasn't in the list, the event doesn't fire.
 
 ##### <a name='each'></a> `.each(Function)`
-Iterate over a collection of clients. This method accepts a callback to be invoked for each item in the collection, and is passed three arguments:
-
- - client
- - id
- - list
-
-The client is defined [here](#clients), the id is the unique name that identifies the client, and the list is the ClientList that `.each` was called on.
+It's basically a `.forEach` on the list. The function you pass will get the client, the client's ID, and the list it was called on.
 
 **Example**
 ```javascript
 clients.each(function (client, id, list) {
-	client; // { platform: Object, socket: Object }
-	typeof id; // 'string'
-	list === clients; // true
+	client.run(function () {
+		// Fun stuff
+	})
 })
 ```
 
 ##### <a name='chain'></a> `.chain([...lists])`
-This is an abstraction method that just calls `this.constructor` to create a new instance. Mainly used to allow subclassing, it makes sure the right class context is kept even when chaining off methods that create new lists, like `.filter` and `.pluck`.
+This is a low-level API for subclasses. It makes sure the right class context is kept even when chaining off methods that create new lists, like `.filter` and `.pluck`.
 
 ```javascript
 var list = new ClientList()
@@ -556,17 +456,94 @@ sub.chain().coolNewMethod() // properly inherits
 
 If you're making an extension that creates a new list instance, use this method to play nice with other extensions.
 
-## Roadmap
-The goal is to keep panic light-weight and modular. Future releases will likely be aimed at improving the plugin system and fixing any egregious bugs or compatibility issues. That said, there are some features we really want first...
+### `panic.server(Server)`
+If an [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server) is passed, panic will use it to configure [socket.io](http://socket.io/) and the `/panic.js` route will be added that servers up the [`panic-client`](https://github.com/gundb/panic-client) browser code.
 
- - Allow clients to send back non-error data (through either the `done` callback or a continuous data stream) to enable ssh-style apps.
+If no server is passed, a new one will be created.
 
- - Catch and report asynchronously thrown errors on...
-	 - **Node.js:** feasible by listening for UncaughtException on `global.process`.
+If you're not familiar with Node.js' http module, that's okay. The quickest way to get up and running is to call `.listen(8080)` which listens for requests on port 8080. In a browser, the url will look something like this: `http://localhost:8080/panic.js`.
 
-	 - **Browsers:** sounds easy in practice, but the browser is a place filled with pain and misery that makes that a really hard thing. Please tell me if you've got a better idea than `window.onerror` :pray:
+**Create a new server**
+```javascript
+var panic = require('panic-server')
+
+// create a new http server instance
+var server = panic.server()
+
+// listen for requests on port 8080
+server.listen(8080)
+```
+
+**Reuse an existing one**
+```javascript
+var panic = require('panic-server')
+
+// create a new http server
+var server = require('http').Server()
+
+// pass it to panic
+panic.server(server)
+
+// start listening on a port
+server.listen(8080)
+```
+
+> If you want to listen on port 80 (the default for browsers), you may need to run node as `sudo`.
+
+Once you have a server listening, point browsers/servers to your address. More API details on the [panic-client readme](https://github.com/gundb/panic-client/#loading-panic-client).
+
+> **Note:** if you're using [PhantomJS](https://github.com/ariya/phantomjs), you'll need to serve the html page over http/s for socket.io to work.
+
+### `panic.client`
+Returns the panic-client webpack bundle. This is useful for injection into a WebDriver instance (using `driver.executeScript`) without needing to do file system calls.
+
+## <a name='scaffolding'></a> Basic test example
+A simple "Hello world" panic app.
+
+**index.html**
+```html
+<script src='http://localhost:8080/panic.js'>
+</script>
+
+<script>
+	// Connect to panic!
+	panic.server('http://localhost:8080')
+</script>
+```
+
+**demo.js**
+```js
+var panic = require('panic-server')
+
+// Start the server on port 8080.
+panic.server().listen(8080)
+
+// Get the dynamic list of clients.
+var clients = panic.clients
+
+// Create dynamic lists of
+// browsers and servers.
+var servers = clients.filter('Node.js')
+var browsers = clients.excluding(servers)
+
+// Wait for the browser to connect.
+browsers.on('add', function (browser) {
+
+	browser.run(function () {
+
+		// This is run in the browser!
+		var header = document.createElement('h1')
+		header.innerHTML = 'OHAI BROWSR!'
+		document.body.appendChild(header)
+	})
+})
+```
+
+Run `demo.js`, then open `index.html` in a browser. Enjoy!
 
 ## Support
-If you have questions or ideas, we'd love to hear them! Just swing by our [gitter channel](https://gitter.im/amark/gun) and ask for @PsychoLlama or @amark. We're usually around :wink:
+- Oh, why thank you! Just star this repo, that's all the support we need :heart:
 
-Built with :heart: by the team at [gunDB](https://github.com/amark/gun).
+Oh.
+
+Just drop by [our gitter channel](https://gitter.im/amark/gun/) and ping @PsychoLlama, or submit an issue on the repo. We're there for ya.
