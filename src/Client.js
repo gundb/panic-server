@@ -55,13 +55,13 @@ Client.prototype = {
 		var promise = new Promise(function (resolve, reject) {
 			socket.once('disconnect', resolve);
 
-			socket.once(jobID, function (error) {
+			socket.once(jobID, function (report) {
 				socket.removeListener('disconnect', resolve);
 
-				if (error) {
-					reject(error);
+				if (report.hasOwnProperty('error')) {
+					reject(report.error);
 				} else {
-					resolve();
+					resolve(report.value);
 				}
 			});
 		});

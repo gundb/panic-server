@@ -58,7 +58,7 @@ describe('A clientList', function () {
 	it('should resolve when all clients finish', function (done) {
 		var socket = client.socket;
 		socket.on('run', function (cb, jobID) {
-			socket.emit(jobID);
+			socket.emit(jobID, {});
 		});
 		list.add(client).run(function () {})
 		.then(function () {
@@ -69,7 +69,9 @@ describe('A clientList', function () {
 
 	it('should reject a promise if an error is sent', function (done) {
 		client.socket.on('run', function (cb, job) {
-			client.socket.emit(job, 'fake error');
+			client.socket.emit(job, {
+				error: 'fake error',
+			});
 		});
 		list.add(client).run(function () {})
 		.catch(function (err) {

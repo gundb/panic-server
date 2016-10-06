@@ -109,7 +109,22 @@ describe('A client', function () {
 			var jobID = spy.calls[0].arguments[1];
 
 			job.then(done);
-			client.socket.emit(jobID);
+			client.socket.emit(jobID, {});
+		});
+
+		it('should resolve to the job value', function () {
+			client.socket.on('run', spy);
+			var job = client.run(function () {});
+
+			var jobID = spy.calls[0].arguments[1];
+
+			client.socket.emit(jobID, {
+				value: 'Hello world!',
+			});
+
+			return job.then(function (value) {
+				expect(value).toBe('Hello world!');
+			});
 		});
 
 		it('should reject if the job fails', function (done) {
@@ -123,7 +138,9 @@ describe('A client', function () {
 				done();
 			});
 
-			client.socket.emit(jobID, error);
+			client.socket.emit(jobID, {
+				error: error,
+			});
 		});
 
 		it('should unsubscribe once finished', function () {
@@ -132,7 +149,7 @@ describe('A client', function () {
 			client.run(function () {});
 			var jobID = spy.calls[0].arguments[1];
 			expect(socket.listenerCount(jobID)).toBe(1);
-			socket.emit(jobID);
+			socket.emit(jobID, {});
 			expect(socket.listenerCount(jobID)).toBe(0);
 		});
 
