@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+### Changed
+- Several breaking changes in `panic-client` v1.0, reference [their changelog](https://github.com/gundb/panic-client/blob/master/CHANGELOG.md#v100) for differences.
+
 ### Removed
 - `.len()` has been permanently removed (was previously under deprecation notice).
 
