@@ -11,20 +11,20 @@ var Promise = require('bluebird');
  * @augments EventEmitter
  */
 function ClientList(lists) {
-	var list = this;
-	Emitter.call(this);
-	list.clients = {};
+  var list = this;
+  Emitter.call(this);
+  list.clients = {};
 
-	var add = list.add.bind(list);
+  var add = list.add.bind(list);
 
-	/** See if the user passed an array. */
-	if (lists instanceof Array) {
-		lists.forEach(function (list) {
+  /** See if the user passed an array. */
+  if (lists instanceof Array) {
+   lists.forEach(function (list) {
 
-			/** Add each client, listening for additions. */
-			list.each(add).on('add', add);
-		});
-	}
+     /** Add each client, listening for additions. */
+     list.each(add).on('add', add);
+   });
+  }
 }
 
 var API = ClientList.prototype = new Emitter();
@@ -40,7 +40,7 @@ API.constructor = ClientList;
  * or a subclass.
  */
 API.chain = function (list) {
-	return new this.constructor(list);
+  return new this.constructor(list);
 };
 
 /**
@@ -49,13 +49,13 @@ API.chain = function (list) {
  * @return {this} - The current context.
  */
 API.each = function (cb) {
-	var key;
-	for (key in this.clients) {
-		if (this.clients.hasOwnProperty(key)) {
-			cb(this.clients[key], key, this);
-		}
-	}
-	return this;
+  var key;
+  for (key in this.clients) {
+   if (this.clients.hasOwnProperty(key)) {
+     cb(this.clients[key], key, this);
+   }
+  }
+  return this;
 };
 
 /**
@@ -67,29 +67,29 @@ API.each = function (cb) {
  * @returns {this} - The current context.
  */
 API.add = function (client) {
-	var socket, list = this;
-	socket = client.socket;
+  var socket, list = this;
+  socket = client.socket;
 
-	/**
-	 * Ignore disconnected clients,
-	 * or those already in the list.
-	 */
-	if (!socket.connected || this.get(socket.id)) {
-		return this;
-	}
+  /**
+   * Ignore disconnected clients,
+   * or those already in the list.
+   */
+  if (!socket.connected || this.get(socket.id)) {
+   return this;
+  }
 
-	/** Add the client. */
-	this.clients[socket.id] = client;
+  /** Add the client. */
+  this.clients[socket.id] = client;
 
-	/** Remove on disconnect. */
-	socket.on('disconnect', function () {
-		list.remove(client);
-	});
+  /** Remove on disconnect. */
+  socket.on('disconnect', function () {
+   list.remove(client);
+  });
 
-	/** Fire the 'add' event. */
-	this.emit('add', client, socket.id);
+  /** Fire the 'add' event. */
+  this.emit('add', client, socket.id);
 
-	return this;
+  return this;
 };
 
 /**
@@ -99,17 +99,17 @@ API.add = function (client) {
  */
 API.remove = function (client) {
 
-	/** Make sure we really have that client. */
-	if (client.socket.id in this.clients) {
+  /** Make sure we really have that client. */
+  if (client.socket.id in this.clients) {
 
-		/** Remove the client. */
-		delete this.clients[client.socket.id];
+   /** Remove the client. */
+   delete this.clients[client.socket.id];
 
-		/** Fire the 'remove' event. */
-		this.emit('remove', client, client.socket.id);
-	}
+   /** Fire the 'remove' event. */
+   this.emit('remove', client, client.socket.id);
+  }
 
-	return this;
+  return this;
 };
 
 /**
@@ -118,7 +118,7 @@ API.remove = function (client) {
  * @return {Object|null} - The client object, if found.
  */
 API.get = function (ID) {
-	return this.clients[ID] || null;
+  return this.clients[ID] || null;
 };
 
 /**
@@ -129,32 +129,32 @@ API.get = function (ID) {
  */
 API.filter = function (query) {
 
-	/** Create a new target list. */
-	var list = this.chain();
+  /** Create a new target list. */
+  var list = this.chain();
 
-	function filter (client, ID) {
-		if (query instanceof Function && query(client, ID)) {
-			list.add(client);
-			return;
-		} else if (typeof query === 'string' || query instanceof RegExp) {
-			query = {
-				name: query
-			};
-		}
-		if (typeof query === 'object' && query) {
-			if (match(query, client.platform)) {
-				list.add(client);
-			}
-		}
-	}
+  function filter (client, ID) {
+   if (query instanceof Function && query(client, ID)) {
+     list.add(client);
+     return;
+   } else if (typeof query === 'string' || query instanceof RegExp) {
+     query = {
+      name: query
+     };
+   }
+   if (typeof query === 'object' && query) {
+     if (match(query, client.platform)) {
+      list.add(client);
+     }
+   }
+  }
 
-	/**
-	 * Filter everything in the list, then listen
-	 * for future clients.
-	 */
-	this.each(filter).on('add', filter);
+  /**
+   * Filter everything in the list, then listen
+   * for future clients.
+   */
+  this.each(filter).on('add', filter);
 
-	return list;
+  return list;
 };
 
 /**
@@ -165,33 +165,33 @@ API.filter = function (query) {
  */
 API.excluding = function (exclude) {
 
-	/**
-	 * Add anything not in the exclusion list.
-	 * Remember .filter is reactive.
-	 */
-	var list = this.filter(function (client) {
-		var excluded = exclude.get(client.socket.id);
+  /**
+   * Add anything not in the exclusion list.
+   * Remember .filter is reactive.
+   */
+  var list = this.filter(function (client) {
+   var excluded = exclude.get(client.socket.id);
 
-		return !excluded;
-	});
+   return !excluded;
+  });
 
-	var self = this;
+  var self = this;
 
-	/**
-	 * Add clients removed from the exclusion list,
-	 * and contained in the original list.
-	 */
-	exclude.on('remove', function (client) {
-		var socket = client.socket;
-		var connected = socket.connected;
-		var relevant = self.get(socket.id);
+  /**
+   * Add clients removed from the exclusion list,
+   * and contained in the original list.
+   */
+  exclude.on('remove', function (client) {
+   var socket = client.socket;
+   var connected = socket.connected;
+   var relevant = self.get(socket.id);
 
-		if (connected && relevant) {
-			list.add(client);
-		}
-	});
+   if (connected && relevant) {
+     list.add(client);
+   }
+  });
 
-	return list;
+  return list;
 };
 
 /**
@@ -202,16 +202,16 @@ API.excluding = function (exclude) {
  * rejects if any of them fail.
  */
 API.run = function (job, props) {
-	var jobs = [];
+  var jobs = [];
 
-	/** Run the job on each client. */
-	this.each(function (client) {
-		var promise = client.run(job, props);
-		jobs.push(promise);
-	});
+  /** Run the job on each client. */
+  this.each(function (client) {
+   var promise = client.run(job, props);
+   jobs.push(promise);
+  });
 
-	/** Wait for all jobs to finish. */
-	return Promise.all(jobs);
+  /** Wait for all jobs to finish. */
+  return Promise.all(jobs);
 };
 
 /**
@@ -220,27 +220,27 @@ API.run = function (job, props) {
  * @return {Promise} - Resolves when the minimum is reached.
  */
 API.atLeast = function (min) {
-	var list = this;
+  var list = this;
 
-	/** Check to see if we already have enough. */
-	if (list.length >= min) {
-		return Promise.resolve();
-	}
+  /** Check to see if we already have enough. */
+  if (list.length >= min) {
+   return Promise.resolve();
+  }
 
-	return new Promise(function (resolve) {
+  return new Promise(function (resolve) {
 
-		/** Wait for new clients. */
-		list.on('add', function cb () {
+   /** Wait for new clients. */
+   list.on('add', function cb () {
 
-			/** If we have enough... */
-			if (list.length >= min) {
+     /** If we have enough... */
+     if (list.length >= min) {
 
-				/** Unsubscribe and resolve. */
-				list.removeListener('add', cb);
-				resolve();
-			}
-		});
-	});
+      /** Unsubscribe and resolve. */
+      list.removeListener('add', cb);
+      resolve();
+     }
+   });
+  });
 };
 
 /**
@@ -251,38 +251,38 @@ API.atLeast = function (min) {
  */
 API.pluck = function (num) {
 
-	/** Create a new target list. */
-	var list = this.chain();
-	var self = this;
+  /** Create a new target list. */
+  var list = this.chain();
+  var self = this;
 
-	/**
-	 * Add a client if there's still room.
-	 * @param  {Object} client - A client object.
-	 * @return {undefined}
-	 */
-	function measure(client) {
-		if (!list.atCapacity) {
-			list.add(client);
-		}
-	}
+  /**
+   * Add a client if there's still room.
+   * @param  {Object} client - A client object.
+   * @return {undefined}
+   */
+  function measure(client) {
+   if (!list.atCapacity) {
+     list.add(client);
+   }
+  }
 
-	/** Check to see if it's already full. */
-	list.on('add', function () {
-		if (list.length === num) {
-			list.atCapacity = true;
-		}
-	});
+  /** Check to see if it's already full. */
+  list.on('add', function () {
+   if (list.length === num) {
+     list.atCapacity = true;
+   }
+  });
 
-	/** See if we can replace the lost client. */
-	list.on('remove', function () {
-		list.atCapacity = false;
-		self.each(measure);
-	});
+  /** See if we can replace the lost client. */
+  list.on('remove', function () {
+   list.atCapacity = false;
+   self.each(measure);
+  });
 
-	/** Add as many clients as we can. */
-	this.each(measure).on('add', measure);
+  /** Add as many clients as we can. */
+  this.each(measure).on('add', measure);
 
-	return list;
+  return list;
 };
 
 API.atCapacity = false;
@@ -292,21 +292,21 @@ API.atCapacity = false;
  * @returns {Number} - The length of the list.
  */
 Object.defineProperty(API, 'length', {
-	get: function () {
+  get: function () {
 
-		/** Feature detect Object.keys. */
-		if (Object.keys instanceof Function) {
-			return Object.keys(this.clients).length;
-		}
+   /** Feature detect Object.keys. */
+   if (Object.keys instanceof Function) {
+     return Object.keys(this.clients).length;
+   }
 
-		/** Fall back to iterating. */
-		var length = 0;
-		this.each(function () {
-			length += 1;
-		});
+   /** Fall back to iterating. */
+   var length = 0;
+   this.each(function () {
+     length += 1;
+   });
 
-		return length;
-	}
+   return length;
+  }
 });
 
 module.exports = ClientList;

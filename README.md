@@ -83,7 +83,7 @@ It's stringified, sent to the client, then evaluated in a special job context.
 console.log('This runs in your process.')
 
 client.run(function () {
-	console.log("This doesn't.")
+  console.log("This doesn't.")
 })
 ```
 
@@ -105,18 +105,18 @@ Because your function can't see any local scope variables, anything the function
 var clientPort = 8085
 
 client.run(function () {
-	var http = require('http')
-	var server = new http.Server()
+  var http = require('http')
+  var server = new http.Server()
 
-	// The variable you sent.
-	var port = this.props.port
+  // The variable you sent.
+  var port = this.props.port
 
-	server.listen(port)
+  server.listen(port)
 }, {
 
-	// Sends the local variable
-	// as `props.port`.
-	port: clientPort
+  // Sends the local variable
+  // as `props.port`.
+  port: clientPort
 })
 ```
 
@@ -131,12 +131,12 @@ Prepare yourself, this is pretty awesome.
 
 ```js
 client.run(function () {
-	var ip = require('ip')
-	return ip.address()
+  var ip = require('ip')
+  return ip.address()
 }).then(function (ip) {
 
-	// The address of the other machine
-	console.log(ip)
+  // The address of the other machine
+  console.log(ip)
 })
 ```
 
@@ -146,23 +146,23 @@ So, if one of your clients is a node process...
 
 ```js
 function sh () {
-	var child = require('child_process')
-	var spawn = child.spawnSync
+  var child = require('child_process')
+  var spawn = child.spawnSync
 
-	var cmd = this.props.cmd
-	var args = this.props.args
+  var cmd = this.props.cmd
+  var args = this.props.args
 
-	var result = spawn(cmd, args || [])
+  var result = spawn(cmd, args || [])
 
-	return result.stdout
+  return result.stdout
 }
 
 client.run(sh, {
-	cmd: 'ls',
-	args: ['-lah']
+  cmd: 'ls',
+  args: ['-lah']
 }).then(function (dir) {
-	var output = dir.toString('utf8')
-	console.log(output)
+  var output = dir.toString('utf8')
+  console.log(output)
 })
 ```
 
@@ -177,22 +177,22 @@ If your job throws an error, you'll get the message back on the server:
 
 ```js
 client.run(function () {
-	throw new Error(
-		'Hrmm, servers are on fire.'
-	)
+  throw new Error(
+   'Hrmm, servers are on fire.'
+  )
 }).catch(function (error) {
-	console.log(error)
-	/*
-	{
-		message: 'Hrmm, servers...',
-		source: `function () {
-			throw new Error(
-				'Hrmm, servers are on fire.'
-			)
-		}`,
-		platform: {} // platform.js
-	}
-	*/
+  console.log(error)
+  /*
+  {
+   message: 'Hrmm, servers...',
+   source: `function () {
+     throw new Error(
+      'Hrmm, servers are on fire.'
+     )
+   }`,
+   platform: {} // platform.js
+  }
+  */
 })
 ```
 
@@ -223,7 +223,7 @@ It'll pass both the `Client` and the socket ID.
 
 ```js
 clients.on('add', function (client, id) {
-	console.log('New client:', id)
+  console.log('New client:', id)
 })
 ```
 
@@ -232,7 +232,7 @@ Basically the same as `"add"`, just backwards.
 
 ```js
 clients.on('remove', function (client, id) {
-	console.log('Client', id, 'left.')
+  console.log('Client', id, 'left.')
 })
 ```
 
@@ -246,8 +246,8 @@ var explorer = clients.filter('Internet Explorer')
 var opera = clients.filter('Opera Mini')
 
 var despicable = new ClientList([
-	explorer,
-	opera,
+  explorer,
+  opera,
 ])
 ```
 
@@ -279,11 +279,11 @@ When passed a `String` or `RegExp`, it'll be used to match against the `platform
 
 ```javascript
 var list = clients.filter({
-	layout: /(Gecko|Blink)/,
-	os: {
-		architecture: 64,
-		family: /(OS X|Windows)/,
-	},
+  layout: /(Gecko|Blink)/,
+  os: {
+   architecture: 64,
+   family: /(OS X|Windows)/,
+  },
 })
 ```
 
@@ -291,22 +291,22 @@ Every setting above is optional, and you can create as loose or specific a query
 
 ```javascript
 var firefox = clients.filter(function (client, id, list) {
-	// `id`: The unique client id
-	// `list`: The parent list object, in this case `clients`
+  // `id`: The unique client id
+  // `list`: The parent list object, in this case `clients`
 
-	var platform = client.platform;
+  var platform = client.platform;
 
-	/*
-		This query only adds versions of
-		Firefox later than version 36.
-	*/
-	if (platform.name === 'Firefox' && platform.version > '36') {
-		// add this client to the new list
-		return true;
-	} else {
-		// leave the client out of the new list
-		return false;
-	}
+  /*
+   This query only adds versions of
+   Firefox later than version 36.
+  */
+  if (platform.name === 'Firefox' && platform.version > '36') {
+   // add this client to the new list
+   return true;
+  } else {
+   // leave the client out of the new list
+   return false;
+  }
 });
 ```
 
@@ -318,7 +318,7 @@ var firefox = clients.filter('Firefox')
 
 // the list of firefox newer after version 36
 var firefoxAfter36 = firefox.filter(function (client) {
-	return client.platform.version > '36'
+  return client.platform.version > '36'
 });
 ```
 
@@ -362,7 +362,7 @@ var bob = clients
 // and another, so long as it isn't alice or bob
 var carl = clients
 .excluding(
-	new List([ alice, bob ])
+  new List([ alice, bob ])
 )
 .pluck(1)
 ```
@@ -383,8 +383,8 @@ var minimum = clients.atLeast(2)
 
 minimum.then(function () {
 
-	// 2 clients are connected now.
-	return clients.run(/* ... */)
+  // 2 clients are connected now.
+  return clients.run(/* ... */)
 })
 ```
 
@@ -406,10 +406,10 @@ However, if any client fails, the promise rejects.
 
 ```js
 panic.clients.run(function () {
-	var ip = require('ip')
-	return ip.address()
+  var ip = require('ip')
+  return ip.address()
 }).then(function (ips) {
-	console.log(ips) // Array of IPs.
+  console.log(ips) // Array of IPs.
 })
 ```
 
@@ -431,9 +431,9 @@ It's basically a `.forEach` on the list. The function you pass will get the clie
 **Example**
 ```javascript
 clients.each(function (client, id, list) {
-	client.run(function () {
-		// Fun stuff
-	})
+  client.run(function () {
+   // Fun stuff
+  })
 })
 ```
 
@@ -445,7 +445,7 @@ var list = new ClientList()
 list.chain() instanceof ClientList // true
 
 class SubClass extends ClientList {
-	coolNewMethod() { /* bacon */ }
+  coolNewMethod() { /* bacon */ }
 }
 
 var sub = new SubClass()
@@ -506,8 +506,8 @@ A simple "Hello world" panic app.
 </script>
 
 <script>
-	// Connect to panic!
-	panic.server('http://localhost:8080')
+  // Connect to panic!
+  panic.server('http://localhost:8080')
 </script>
 ```
 
@@ -529,13 +529,13 @@ var browsers = clients.excluding(servers)
 // Wait for the browser to connect.
 browsers.on('add', function (browser) {
 
-	browser.run(function () {
+  browser.run(function () {
 
-		// This is run in the browser!
-		var header = document.createElement('h1')
-		header.innerHTML = 'OHAI BROWSR!'
-		document.body.appendChild(header)
-	})
+   // This is run in the browser!
+   var header = document.createElement('h1')
+   header.innerHTML = 'OHAI BROWSR!'
+   document.body.appendChild(header)
+  })
 })
 ```
 

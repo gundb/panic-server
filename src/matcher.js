@@ -12,37 +12,37 @@
  * @return {Boolean} - Whether the platform matches the query.
  */
 function match(query, platform) {
-	var key, value, matches = true;
+  var key, value, matches = true;
 
-	/** Check all query options. */
-	for (key in query) {
-		if (!(query.hasOwnProperty(key))) {
-			continue;
-		}
+  /** Check all query options. */
+  for (key in query) {
+   if (!(query.hasOwnProperty(key))) {
+     continue;
+   }
 
-		value = query[key];
+   value = query[key];
 
-		if (value instanceof RegExp) {
+   if (value instanceof RegExp) {
 
-			/** Tests if the expression matches. */
-			matches = matches && !!platform[key].match(value);
-		} else if (typeof value === 'string') {
+     /** Tests if the expression matches. */
+     matches = matches && !!platform[key].match(value);
+   } else if (typeof value === 'string') {
 
-			/**
-			 * Check for equality against the expression.
-			 * Loose check for string vs number cases
-			 * (like os.architecture).
-			 */
-			matches = matches && platform[key] == value;
-		} else if (value instanceof Object) {
+     /**
+      * Check for equality against the expression.
+      * Loose check for string vs number cases
+      * (like os.architecture).
+      */
+     matches = matches && platform[key] == value;
+   } else if (value instanceof Object) {
 
-			/** Recursively match deeper queries. */
-			return match(value, platform[key] || {});
-		}
-	}
+     /** Recursively match deeper queries. */
+     return match(value, platform[key] || {});
+   }
+  }
 
-	/** Whether the query matches. */
-	return matches;
+  /** Whether the query matches. */
+  return matches;
 }
 
 module.exports = match;

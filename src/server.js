@@ -15,13 +15,13 @@ var client;
  * @returns {String} - The whole webpacked client bundle.
  */
 Object.defineProperty(panic, 'client', {
-	get: function () {
-		if (!client) {
-			client = fs.readFileSync(file, 'utf8');
-		}
+  get: function () {
+   if (!client) {
+     client = fs.readFileSync(file, 'utf8');
+   }
 
-		return client;
-	}
+   return client;
+  }
 });
 
 /**
@@ -32,9 +32,9 @@ Object.defineProperty(panic, 'client', {
  * @return {undefined}
  */
 function serve(req, res) {
-	if (req.url === '/panic.js') {
-		res.end(panic.client);
-	}
+  if (req.url === '/panic.js') {
+   res.end(panic.client);
+  }
 }
 
 /**
@@ -44,18 +44,18 @@ function serve(req, res) {
  * @return {undefined}
  */
 function upgrade(socket) {
-	socket.on('handshake', function (platform) {
+  socket.on('handshake', function (platform) {
 
-		/** Create a new panic client. */
-		var client = new Client({
-			socket: socket,
-			platform: platform,
-		});
+   /** Create a new panic client. */
+   var client = new Client({
+     socket: socket,
+     platform: platform,
+   });
 
-		/** Add the new client. */
-		clients.add(client);
+   /** Add the new client. */
+   clients.add(client);
 
-	});
+  });
 }
 
 /**
@@ -67,17 +67,17 @@ function upgrade(socket) {
  */
 function open(server) {
 
-	if (!(server instanceof Server)) {
-		server = new Server();
-	}
+  if (!(server instanceof Server)) {
+   server = new Server();
+  }
 
-	/** Handle /panic.js route. */
-	server.on('request', serve);
+  /** Handle /panic.js route. */
+  server.on('request', serve);
 
-	/** Upgrade with socket.io */
-	io(server).on('connection', upgrade);
+  /** Upgrade with socket.io */
+  io(server).on('connection', upgrade);
 
-	return server;
+  return server;
 }
 
 module.exports = open;

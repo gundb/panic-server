@@ -13,63 +13,63 @@ var Promise = require('bluebird');
  */
 function Client (client) {
 
-	/** Basic input validation. */
-	if (!client.socket) {
-		throw new Error('Invalid "client.socket" property.');
-	}
-	if (!client.platform) {
-		throw new Error('Invalid "client.platform" property.');
-	}
+  /** Basic input validation. */
+  if (!client.socket) {
+   throw new Error('Invalid "client.socket" property.');
+  }
+  if (!client.platform) {
+   throw new Error('Invalid "client.platform" property.');
+  }
 
-	this.socket = client.socket;
-	this.platform = client.platform;
+  this.socket = client.socket;
+  this.platform = client.platform;
 }
 
 Client.prototype = {
-	constructor: Client,
+  constructor: Client,
 
-	/**
-	 * Sends a function to be run on the client.
-	 * @param  {Function} job - A function to be run remotely.
-	 * The function will be stringified, so it cannot depend on
-	 * external "local" variables, including other functions.
-	 * @param  {Object} [props] - Any variables used in the job.
-	 * @return {Promise} - Resolves if the job finishes,
-	 * rejects if it throws an error.
-	 */
-	run: function (job, props) {
-		if (typeof job !== 'function') {
-			throw new TypeError(
-				'Expected job "' + job + '" to be a function.'
-			);
-		}
+  /**
+   * Sends a function to be run on the client.
+   * @param  {Function} job - A function to be run remotely.
+   * The function will be stringified, so it cannot depend on
+   * external "local" variables, including other functions.
+   * @param  {Object} [props] - Any variables used in the job.
+   * @return {Promise} - Resolves if the job finishes,
+   * rejects if it throws an error.
+   */
+  run: function (job, props) {
+   if (typeof job !== 'function') {
+     throw new TypeError(
+      'Expected job "' + job + '" to be a function.'
+     );
+   }
 
-		var source = String(job);
-		var jobID = Math.random()
-			.toString(36)
-			.slice(2);
+   var source = String(job);
+   var jobID = Math.random()
+     .toString(36)
+     .slice(2);
 
-		var socket = this.socket;
+   var socket = this.socket;
 
-		/** Report the success or failure of the job. */
-		var promise = new Promise(function (resolve, reject) {
-			socket.once('disconnect', resolve);
+   /** Report the success or failure of the job. */
+   var promise = new Promise(function (resolve, reject) {
+     socket.once('disconnect', resolve);
 
-			socket.once(jobID, function (report) {
-				socket.removeListener('disconnect', resolve);
+     socket.once(jobID, function (report) {
+      socket.removeListener('disconnect', resolve);
 
-				if (report.hasOwnProperty('error')) {
-					reject(report.error);
-				} else {
-					resolve(report.value);
-				}
-			});
-		});
+      if (report.hasOwnProperty('error')) {
+        reject(report.error);
+      } else {
+        resolve(report.value);
+      }
+     });
+   });
 
-		socket.emit('run', source, jobID, props);
+   socket.emit('run', source, jobID, props);
 
-		return promise;
-	},
+   return promise;
+  },
 };
 
 module.exports = Client;
