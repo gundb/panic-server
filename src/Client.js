@@ -15,10 +15,10 @@ function Client (client) {
 
   /** Basic input validation. */
   if (!client.socket) {
-   throw new Error('Invalid "client.socket" property.');
+    throw new Error('Invalid "client.socket" property.');
   }
   if (!client.platform) {
-   throw new Error('Invalid "client.platform" property.');
+    throw new Error('Invalid "client.platform" property.');
   }
 
   this.socket = client.socket;
@@ -38,37 +38,37 @@ Client.prototype = {
    * rejects if it throws an error.
    */
   run: function (job, props) {
-   if (typeof job !== 'function') {
-     throw new TypeError(
+    if (typeof job !== 'function') {
+      throw new TypeError(
       'Expected job "' + job + '" to be a function.'
      );
-   }
+    }
 
-   var source = String(job);
-   var jobID = Math.random()
+    var source = String(job);
+    var jobID = Math.random()
      .toString(36)
      .slice(2);
 
-   var socket = this.socket;
+    var socket = this.socket;
 
    /** Report the success or failure of the job. */
-   var promise = new Promise(function (resolve, reject) {
-     socket.once('disconnect', resolve);
+    var promise = new Promise(function (resolve, reject) {
+      socket.once('disconnect', resolve);
 
-     socket.once(jobID, function (report) {
-      socket.removeListener('disconnect', resolve);
+      socket.once(jobID, function (report) {
+        socket.removeListener('disconnect', resolve);
 
-      if (report.hasOwnProperty('error')) {
-        reject(report.error);
-      } else {
-        resolve(report.value);
-      }
-     });
-   });
+        if (report.hasOwnProperty('error')) {
+          reject(report.error);
+        } else {
+          resolve(report.value);
+        }
+      });
+    });
 
-   socket.emit('run', source, jobID, props);
+    socket.emit('run', source, jobID, props);
 
-   return promise;
+    return promise;
   },
 };
 

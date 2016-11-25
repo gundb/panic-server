@@ -2,6 +2,11 @@
 var Emitter = require('events');
 var Client = require('../src/Client');
 
+/**
+ * Creates a client wrapping a new fake websocket.
+ * @param  {Object} [platform] - A platform.js-style object.
+ * @return {Client} - Draws from a fake socket instance.
+ */
 function mock (platform) {
   var rand = Math.random();
 
@@ -11,8 +16,8 @@ function mock (platform) {
   socket.id = rand.toString(36).slice(2);
 
   return new Client({
-   socket: socket,
-   platform: platform || {},
+    socket: socket,
+    platform: platform || {},
   });
 }
 

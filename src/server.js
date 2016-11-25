@@ -1,4 +1,4 @@
-/*eslint-disable no-sync*/
+/* eslint-disable no-sync*/
 'use strict';
 
 var io = require('socket.io');
@@ -16,12 +16,12 @@ var client;
  */
 Object.defineProperty(panic, 'client', {
   get: function () {
-   if (!client) {
-     client = fs.readFileSync(file, 'utf8');
-   }
+    if (!client) {
+      client = fs.readFileSync(file, 'utf8');
+    }
 
-   return client;
-  }
+    return client;
+  },
 });
 
 /**
@@ -31,9 +31,9 @@ Object.defineProperty(panic, 'client', {
  * @param  {Object} res - http response object.
  * @return {undefined}
  */
-function serve(req, res) {
+function serve (req, res) {
   if (req.url === '/panic.js') {
-   res.end(panic.client);
+    res.end(panic.client);
   }
 }
 
@@ -43,17 +43,17 @@ function serve(req, res) {
  * @param  {Socket} socket - A socket.io websocket.
  * @return {undefined}
  */
-function upgrade(socket) {
+function upgrade (socket) {
   socket.on('handshake', function (platform) {
 
    /** Create a new panic client. */
-   var client = new Client({
-     socket: socket,
-     platform: platform,
-   });
+    var client = new Client({
+      socket: socket,
+      platform: platform,
+    });
 
    /** Add the new client. */
-   clients.add(client);
+    clients.add(client);
 
   });
 }
@@ -65,10 +65,10 @@ function upgrade(socket) {
  * If none is provided, a server will be created.
  * @return {Server} - Either the server passed, or a new server.
  */
-function open(server) {
+function open (server) {
 
   if (!(server instanceof Server)) {
-   server = new Server();
+    server = new Server();
   }
 
   /** Handle /panic.js route. */
