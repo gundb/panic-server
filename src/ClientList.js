@@ -1,6 +1,5 @@
 'use strict';
 var Emitter = require('events');
-var match = require('./matcher');
 var Promise = require('bluebird');
 
 /**
@@ -124,33 +123,32 @@ API.get = function (ID) {
 /**
  * Create a new reactive list as the result of a
  * platform query.
- * @param  {Object|String|RegExp} query - Platform query.
+ * @param  {Object|String|RegExp|Function} filter - Platform query.
  * @return {ClientList} - A new list of clients.
  */
-API.filter = function (query) {
+API.filter = function (filter) {
 
   /** Create a new target list. */
   var list = this.chain();
 
+  if (typeof filter !== 'function') {
+    var query = filter;
+    filter = function (client) {
+      return client.matches(query);
+    };
+  }
+
   /**
-   * Adds matching clients to the new filtered list.
-   * @param  {Client} client - A connected client.
-   * @param  {String} ID - The client identifier.
+   * Adds a client to the new list if it satisfies the query.
+   * @param  {Client} client - A client instance.
+   * @param  {String} ID - The unique client ID.
    * @return {undefined}
    */
-  function filter (client, ID) {
-    if (query instanceof Function && query(client, ID)) {
+  function add (client, ID) {
+    var matches = filter(client, ID);
+
+    if (matches) {
       list.add(client);
-      return;
-    } else if (typeof query === 'string' || query instanceof RegExp) {
-      query = {
-        name: query,
-      };
-    }
-    if (typeof query === 'object' && query) {
-      if (match(query, client.platform)) {
-        list.add(client);
-      }
     }
   }
 
@@ -158,7 +156,7 @@ API.filter = function (query) {
    * Filter everything in the list, then listen
    * for future clients.
    */
-  this.each(filter).on('add', filter);
+  this.each(add).on('add', add);
 
   return list;
 };

@@ -1,48 +1,53 @@
-/* eslint eqeqeq: "off"*/
 'use strict';
+
+var match;
+
+/**
+ * Whether two values look the same.
+ * @param  {Mixed} expected - An expression to match the value against.
+ * Can be a regular expression, an object containing more comparisons,
+ * or just a primitive.
+ * @param  {Mixed} value - A value to compare against the expression.
+ * @return {Boolean} - Whether the values look similar.
+ */
+function matches (expected, value) {
+
+  /** Matchers can be regular expressions. */
+  if (expected instanceof RegExp) {
+    return expected.test(value);
+  }
+
+  /** Matchers can be nested objects. */
+  if (expected instanceof Object) {
+    return match(expected, value || {});
+  }
+
+  /** Or, just a primitive value. */
+  return value === expected;
+}
 
 /**
  * Runs a platform query against a platform.
- * @param  {Object|RegExp|String} query
- * If a a string or regular expression is given,
- * it'll be matched against each platform name.
- * If it's an object, it'll be recursively matched
- * against each platform (nested regular expressions allowed).
+ * @param  {Object} query - Contains properties to match against the
+ * platform. If it contains nested objects, they will match against the
+ * platform object of the same name, regardless of depth. If a property
+ * is a regular expression, it will run against the platform property of
+ * the same name.
  * @param  {Object} platform - A platform.js object.
  * @return {Boolean} - Whether the platform matches the query.
  */
-function match (query, platform) {
-  var key, value, matches = true;
+match = function (query, platform) {
+  var fields = Object.keys(query);
 
-  /** Check all query options. */
-  for (key in query) {
-    if (!(query.hasOwnProperty(key))) {
-      continue;
-    }
+  var invalid = fields.some(function isInvalid (field) {
+    var expected = query[field];
+    var value = platform[field];
 
-    value = query[key];
+    /** Look for values that don't match the query. */
+    return matches(expected, value) === false;
+  });
 
-    if (value instanceof RegExp) {
-
-     /** Tests if the expression matches. */
-      matches = matches && !!platform[key].match(value);
-    } else if (typeof value === 'string') {
-
-     /**
-      * Check for equality against the expression.
-      * Loose check for string vs number cases
-      * (like os.architecture).
-      */
-      matches = matches && platform[key] == value;
-    } else if (value instanceof Object) {
-
-     /** Recursively match deeper queries. */
-      return match(value, platform[key] || {});
-    }
-  }
-
-  /** Whether the query matches. */
-  return matches;
-}
+  return !invalid;
+};
 
 module.exports = match;

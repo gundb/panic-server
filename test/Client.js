@@ -162,4 +162,99 @@ describe('A client', function () {
 
   });
 
+  describe('platform query', function () {
+
+    beforeEach(function () {
+      client.platform = {
+        name: 'Node.js',
+        version: '7.1.0',
+        os: { family: 'Darwin' },
+      };
+    });
+
+    it('should return a boolean', function () {
+      var matches = client.matches({ name: 'Node.js' });
+      expect(matches).toBeA('boolean');
+    });
+
+    it('should pass if the given fields match', function () {
+      var matches = client.matches({
+        name: 'Node.js',
+      });
+      expect(matches).toBe(true);
+    });
+
+    it('should only pass if all the fields match', function () {
+      var matches = client.matches({
+        name: 'Node.js',
+        version: 'nah',
+      });
+
+      expect(matches).toBe(false);
+    });
+
+    it('should accept regular expressions', function () {
+      var matches = client.matches({
+        name: /node/i,
+      });
+      expect(matches).toBe(true);
+    });
+
+    it('should assume regex input matches the name', function () {
+      expect(client.matches(/Node/)).toBe(true);
+      expect(client.matches(/Firefox/)).toBe(false);
+    });
+
+    it('should assume string input matches the name', function () {
+      expect(client.matches('Node.js')).toBe(true);
+      expect(client.matches('Firefox')).toBe(false);
+    });
+
+    it('should match against nested fields', function () {
+      var matches;
+
+      matches = client.matches({
+        os: { family: 'Darwin' },
+      });
+      expect(matches).toBe(true);
+
+      matches = client.matches({
+        os: { family: 'Honestly it\'s just a box of potatoes' },
+      });
+      expect(matches).toBe(false);
+    });
+
+    it('should fail if the nested query is not in the platform', function () {
+      var matches = client.matches({
+        'super-weird~field': {
+          burger: true,
+          fries: 'yes please',
+        },
+      });
+      expect(matches).toBe(false);
+    });
+
+    it('should allow nested regex matching', function () {
+      var matches;
+
+      matches = client.matches({
+        os: { family: /Darwin/ },
+      });
+      expect(matches).toBe(true);
+
+      matches = client.matches({
+        os: { family: /why do they call these regular?/ },
+      });
+      expect(matches).toBe(false);
+    });
+
+    it('should fail if the properties given do not match', function () {
+      var matches = client.matches({
+        name: 'Some Non-Existent Platform™',
+      });
+      expect(matches).toBe(false);
+    });
+
+  });
+
 });

@@ -1,6 +1,7 @@
 'use strict';
 
 var Promise = require('bluebird');
+var matches = require('./matcher');
 
 /**
  * A wrapper around a websocket, providing
@@ -69,6 +70,21 @@ Client.prototype = {
     socket.emit('run', source, jobID, props);
 
     return promise;
+  },
+
+  /**
+   * Test whether the client matches a platform query.
+   * @param  {Object|RegExp|String} query - A platform description.
+   * @return {Boolean} - Whether the platform satisfies the query.
+   */
+  matches: function (query) {
+
+    /** Assume non-objects are matching against the platform name. */
+    if (typeof query === 'string' || query instanceof RegExp) {
+      query = { name: query };
+    }
+
+    return matches(query, this.platform);
   },
 };
 
