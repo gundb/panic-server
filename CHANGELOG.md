@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.0
+### Added
+- New `Client#matches` method accepts platform queries like `ClientList#filter`, returning a boolean of whether it matches.
+
 ## v1.0.0
 ### Changed
 - Several breaking changes in `panic-client` v1.0, reference [their changelog](https://github.com/gundb/panic-client/blob/master/CHANGELOG.md#v100) for differences.
