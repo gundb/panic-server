@@ -204,6 +204,62 @@ As you can see, some extra debugging information is attached to each error.
 
 However, due to complexity, stack traces aren't included. `eval` and socket.io make it hard to parse. Maybe in the future.
 
+#### `.matches()`
+Every client has a [`platform`](https://github.com/gundb/panic-server#platform) property. The `matches` method allows you to query it.
+
+This is useful when filtering a group of clients, or ensuring you're sending code to the platform you expect.
+
+> You probably won't use this method directly. However, it's used heavily by the `ClientList#filter` method to select platform groups, which passes through to the `.matches()` API.
+
+When passed a platform expression (more on this in a second), `.matches` returns a boolean of whether the client's platform satisfies the expression.
+
+For example, this code is asking if the platform name matches the given regex:
+
+```js
+// Is this client a Chrome or Firefox browser?
+client.matches(/(Chrome|Firefox)/)
+```
+
+To be more specific, you can pass the exact string you're looking for:
+
+```js
+// Is this a Node.js process?
+client.matches('Node.js')
+```
+
+Though as you can imagine, there's more to a platform than it's name. You can see the full list [here](https://github.com/bestiejs/platform.js/tree/master/doc).
+
+More complex queries can be written by passing an object with more fields to match.
+
+```javascript
+// Is the client a Node.js process running
+// on 64-bit Fedora?
+clients.matches({
+  name: 'Node.js',
+  os: {
+    architecture: 64,
+    family: 'Fedora',
+  },
+})
+```
+
+If you crave more power, you can use regular expressions as the field names.
+
+```js
+// Is this an ether Opera Mini or an
+// IE browser running on either Mac
+// or Android?
+client.matches({
+  name: /(Opera Mini|Internet Explorer)/,
+
+  os: {
+    family: /(OS X|Android)/,
+  },
+})
+```
+
+Only the fields given are matched, so you can be as specific or as loose as you want to be.
+
 ### Lists of clients
 Often, you're working with groups of clients. Like, only run this code on IE, or only on Node.js processes.
 
@@ -273,21 +329,21 @@ If you don't pass an array, you're left with a sad, empty client list.
  - [`.chain()`](#chain)
 
 ##### <a name='filter'></a> `.filter(query)`
-Creates a new list of clients matching a query.
+Creates a new list of clients filtered by their platform.
 
-When passed a `String` or `RegExp`, it'll be used to match against the `platform.name`. For example, `clients.filter('Firefox')` will return a dynamic list of all firefox clients, as will `clients.filter(/Firefox/)`. A more complex query can be formed by passing an object containing more platform descriptors.
+For simpler queries, you can select via string or regular expression, which is matched against the `platform.name`:
 
-```javascript
-var list = clients.filter({
-  layout: /(Gecko|Blink)/,
-  os: {
-   architecture: 64,
-   family: /(OS X|Windows)/,
-  },
-})
+```js
+// Selects all the chrome browsers.
+var chrome = clients.filter('Chrome')
+
+// Selects all firefox and chrome browsers.
+var awesome = clients.filter(/(Firefox|Chrome)/)
 ```
 
-Every setting above is optional, and you can create as loose or specific a query as you need. If you need a more complex query than that, you can also pass a filtering callback, which works much like [`Array.prototype.filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter).
+You can also do more complex queries by passing an object. Refer to the `Client#matches` API to see more examples.
+
+If you're looking for something really specific, you can filter by passing a callback, which functions almost exactly like [`Array.prototype.filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter).
 
 ```javascript
 var firefox = clients.filter(function (client, id, list) {
@@ -310,15 +366,18 @@ var firefox = clients.filter(function (client, id, list) {
 });
 ```
 
-To make things cooler, you can chain filters off one another. For example, the above query only allows versions of firefox after 36. You could write that as two separate queries...
+To make things cooler, you can chain filters off one another. For example, the above query only allows versions of firefox after 36. You could write that as two queries composed together...
 
 ```javascript
-// the list of all firefox clients
+// The list of all firefox clients.
 var firefox = clients.filter('Firefox')
 
-// the list of firefox newer after version 36
+// The list of firefox newer than version 36.
 var firefoxAfter36 = firefox.filter(function (client) {
-  return client.platform.version > '36'
+  var version = client.platform.version
+  var major = version.split('.')[0]
+
+  return Number(major) > 36;
 });
 ```
 
