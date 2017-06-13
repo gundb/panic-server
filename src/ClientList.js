@@ -173,6 +173,10 @@ API.excluding = function (exclude) {
    * Add anything not in the exclusion list.
    * Remember .filter is reactive.
    */
+  if(exclude instanceof Array){
+    exclude = new ClientList(exclude);
+  }
+  
   var list = this.filter(function (client) {
     var excluded = exclude.get(client.socket.id);
 
