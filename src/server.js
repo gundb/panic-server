@@ -67,7 +67,7 @@ function upgrade (socket) {
  */
 function open (server) {
 
-  if (!(server instanceof Server)) {
+  if (!server) { // https is not instance of http, so be more relaxed in our check.
     server = new Server();
   }
 
