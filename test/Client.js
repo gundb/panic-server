@@ -3,7 +3,6 @@
 'use strict';
 var Client = require('../src/Client');
 var Emitter = require('events');
-var Promise = require('bluebird');
 var expect = require('expect');
 
 describe('A client', function () {
@@ -99,7 +98,7 @@ describe('A client', function () {
       expect(args[2]).toBe(props);
     });
 
-    it('should return a bluebird promise', function () {
+    it('should return a promise', function () {
       var job = client.run(function () {});
       expect(job).toBeA(Promise);
     });
