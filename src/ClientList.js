@@ -1,6 +1,5 @@
 'use strict';
 var Emitter = require('events');
-var Promise = require('bluebird');
 
 /**
  * Creates reactive lists of clients.
@@ -176,7 +175,7 @@ API.excluding = function (exclude) {
   if(exclude instanceof Array){
     exclude = new ClientList(exclude);
   }
-  
+
   var list = this.filter(function (client) {
     var excluded = exclude.get(client.socket.id);
 

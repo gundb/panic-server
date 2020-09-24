@@ -4,7 +4,6 @@
 var mock = require('./mock');
 var Client = mock.Client;
 var ClientList = require('../src/ClientList');
-var Promise = require('bluebird');
 
 var expect = require('chai').expect;
 
